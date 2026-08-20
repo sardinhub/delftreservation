@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
+
+export const dynamic = "force-dynamic";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import Link from "next/link";
