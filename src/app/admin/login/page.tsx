@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -27,9 +28,8 @@ export default function AdminLoginPage() {
         throw new Error(data.error || "Login gagal");
       }
 
-      // Cookie is set server-side via httpOnly — no localStorage needed
       router.push("/admin");
-      router.refresh(); // Force layout re-render to pick up session
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
@@ -42,11 +42,18 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-gold-light to-gold-dark flex items-center justify-center mx-auto mb-3 sm:mb-4">
-            <span className="text-white font-bold text-xl sm:text-2xl">D</span>
+          <div className="mx-auto mb-4">
+            <Image
+              src="/logo-delft.svg"
+              alt="DELFT APARTMENT"
+              width={180}
+              height={50}
+              className="mx-auto h-12 sm:h-14 w-auto"
+              priority
+            />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-white">Admin Panel</h1>
-          <p className="text-white/40 text-xs sm:text-sm mt-1">DELFT APARTMENT</p>
+          <p className="text-white/40 text-xs sm:text-sm mt-1">Masuk ke dashboard manajemen</p>
         </div>
 
         {/* Login Form */}

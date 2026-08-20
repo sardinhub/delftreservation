@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AdminLayout({
   children,
@@ -35,7 +36,6 @@ export default function AdminLayout({
       });
   }, [pathname, router]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
@@ -45,7 +45,6 @@ export default function AdminLayout({
     router.push("/admin/login");
   };
 
-  // Login page doesn't need the layout shell
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
@@ -72,8 +71,15 @@ export default function AdminLayout({
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Left: Logo + Desktop Nav */}
             <div className="flex items-center gap-4 sm:gap-8">
-              <Link href="/admin" className="font-bold text-base sm:text-lg text-navy whitespace-nowrap">
-                🏢 DELFT
+              <Link href="/admin" className="flex items-center gap-2 whitespace-nowrap">
+                <Image
+                  src="/logo-delft.svg"
+                  alt="DELFT APARTMENT"
+                  width={120}
+                  height={35}
+                  className="h-8 sm:h-9 w-auto"
+                  priority
+                />
               </Link>
               <div className="hidden sm:flex items-center gap-1">
                 {navLinks.map((link) => (

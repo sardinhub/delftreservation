@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="200" height="50">
+  <!-- Building icon -->
+  <g transform="translate(4, 5)">
+    <!-- Main building -->
+    <rect x="8" y="8" width="22" height="32" rx="2" fill="#1a2744"/>
+    <!-- Windows -->
+    <rect x="12" y="12" width="5" height="5" rx="1" fill="#d4a84b"/>
+    <rect x="21" y="12" width="5" height="5" rx="1" fill="#d4a84b"/>
+    <rect x="12" y="21" width="5" height="5" rx="1" fill="#d4a84b"/>
+    <rect x="21" y="21" width="5" height="5" rx="1" fill="#d4a84b"/>
+    <rect x="12" y="30" width="5" height="5" rx="1" fill="#d4a84b"/>
+    <rect x="21" y="30" width="5" height="5" rx="1" fill="#d4a84b"/>
+    <!-- Door -->
+    <rect x="16" y="36" width="6" height="4" rx="1" fill="#d4a84b"/>
+    <!-- Roof accent -->
+    <rect x="6" y="5" width="26" height="4" rx="1" fill="#b8860b"/>
+  </g>
+  <!-- DELFT text -->
+  <text x="42" y="32" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="26" fill="#1a2744">DELFT</text>
+</svg>
