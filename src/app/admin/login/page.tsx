@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
         <div className="text-center mb-6 sm:mb-8">
           <div className="mx-auto mb-4">
             <Image
-              src="/logo-delft.svg"
+              src="/logo-delft.jpg"
               alt="DELFT APARTMENT"
               width={180}
               height={50}

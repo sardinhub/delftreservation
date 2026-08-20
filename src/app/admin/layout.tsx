@@ -73,7 +73,7 @@ export default function AdminLayout({
             <div className="flex items-center gap-4 sm:gap-8">
               <Link href="/admin" className="flex items-center gap-2 whitespace-nowrap">
                 <Image
-                  src="/logo-delft.svg"
+                  src="/logo-delft.jpg"
                   alt="DELFT APARTMENT"
                   width={120}
                   height={35}
