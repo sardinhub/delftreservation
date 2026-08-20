@@ -46,7 +46,8 @@ model Reservation {
 model Payment {
   id              String   @id @default(cuid())
   amount          Int      // Amount paid in IDR
-  proofImage      String   // Path to uploaded payment proof
+  proofImage      String?  // Path to uploaded payment proof (legacy)
+  proofData       String?  // Base64-encoded payment proof image
   bankName        String?
   accountName     String?
   transferDate    DateTime?

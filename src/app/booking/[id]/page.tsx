@@ -26,7 +26,8 @@ interface Reservation {
   payment: {
     id: string;
     amount: number;
-    proofImage: string;
+    proofImage: string | null;
+    proofData: string | null;
     bankName: string | null;
     accountName: string | null;
     verifiedByAdmin: boolean;
@@ -437,6 +438,16 @@ export default function BookingStatusPage() {
         {reservation.status === "paid" && (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
             <h2 className="font-bold text-navy mb-4">Status Pembayaran</h2>
+            {reservation.payment?.proofData && (
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-500 mb-2">Bukti Transfer yang Diunggah:</p>
+                <img
+                  src={reservation.payment.proofData}
+                  alt="Bukti Transfer"
+                  className="max-w-full rounded-lg border border-gray-200"
+                />
+              </div>
+            )}
             <div className="bg-blue-50 rounded-xl p-4 text-center">
               <p className="text-2xl mb-2">🔍</p>
               <p className="text-blue-700 font-medium">

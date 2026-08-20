@@ -23,7 +23,8 @@ interface Reservation {
   payment: {
     id: string;
     amount: number;
-    proofImage: string;
+    proofImage: string | null;
+    proofData: string | null;
     bankName: string | null;
     accountName: string | null;
     verifiedByAdmin: boolean;
@@ -320,12 +321,12 @@ export default function AdminReservationDetailPage({
                   </span>
                 </div>
               </div>
-              {reservation.payment.proofImage &&
+              {(reservation.payment.proofData || (reservation.payment.proofImage &&
                 reservation.payment.proofImage !==
-                  "/uploads/payments/placeholder.jpg" && (
+                  "/uploads/payments/placeholder.jpg")) && (
                   <div className="mt-3">
                     <img
-                      src={reservation.payment.proofImage}
+                      src={reservation.payment.proofData || reservation.payment.proofImage || ""}
                       alt="Bukti Transfer"
                       className="max-w-sm rounded-lg border border-gray-200"
                     />

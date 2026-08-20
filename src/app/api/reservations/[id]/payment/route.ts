@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
 
 // POST /api/reservations/[id]/payment - Upload payment proof
 export async function POST(
@@ -37,22 +35,18 @@ export async function POST(
     const amount = formData.get("amount") as string | null;
     const transferDate = formData.get("transferDate") as string | null;
 
+    let proofData = "";
     let proofPath = "";
 
     if (proof && proof.size > 0) {
-      // Ensure upload directory exists
-      const uploadDir = join(process.cwd(), "public", "uploads", "payments");
-      await mkdir(uploadDir, { recursive: true });
-
-      // Save file
+      // Convert file to base64 for Vercel-compatible storage
       const bytes = await proof.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const ext = proof.name.split(".").pop() || "jpg";
-      const filename = `${id}-${Date.now()}.${ext}`;
-      const filepath = join(uploadDir, filename);
-
-      await writeFile(filepath, buffer);
-      proofPath = `/uploads/payments/${filename}`;
+      const mimeType = proof.type || `image/${ext}`;
+      const base64 = buffer.toString("base64");
+      proofData = `data:${mimeType};base64,${base64}`;
+      proofPath = `proof-${Date.now()}.${ext}`;
     }
 
     // Check if payment already exists
@@ -66,7 +60,7 @@ export async function POST(
       payment = await prisma.payment.update({
         where: { reservationId: id },
         data: {
-          ...(proofPath && { proofImage: proofPath }),
+          ...(proofData && { proofData, proofImage: proofPath }),
           ...(bankName && { bankName }),
           ...(accountName && { accountName }),
           ...(amount && { amount: parseInt(amount) }),
@@ -80,7 +74,8 @@ export async function POST(
         data: {
           reservationId: id,
           amount: amount ? parseInt(amount) : reservation.totalPrice,
-          proofImage: proofPath || "/uploads/payments/placeholder.jpg",
+          proofData: proofData || null,
+          proofImage: proofPath || null,
           bankName: bankName || null,
           accountName: accountName || null,
           transferDate: transferDate ? new Date(transferDate) : null,
