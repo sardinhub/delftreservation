@@ -6,16 +6,6 @@ datasource db {
   provider = "sqlite"
 }
 
-model Room {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  description String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  reservations Reservation[]
-}
-
 model Reservation {
   id            String   @id @default(cuid())
   guestName     String
@@ -30,9 +20,6 @@ model Reservation {
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  room   Room?   @relation(fields: [roomId], references: [id])
-  roomId String?
 }
 
 model Admin {

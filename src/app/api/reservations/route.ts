@@ -45,17 +45,12 @@ export async function POST(request: NextRequest) {
         price: parseInt(price),
         notes: notes || null,
         status: "menunggu_pembayaran",
-        roomId: null,
       },
     });
 
     return NextResponse.json(reservation, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/reservations error:", error);
-    console.error("Error name:", error?.name);
-    console.error("Error code:", error?.code);
-    console.error("Error message:", error?.message);
-    console.error("Error meta:", error?.meta);
     return NextResponse.json({ 
       error: "Gagal membuat reservasi", 
       details: error?.message || "Unknown error",
