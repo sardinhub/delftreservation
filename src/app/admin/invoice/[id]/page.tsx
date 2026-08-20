@@ -88,13 +88,30 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
 
       const element = invoiceRef.current;
 
+      // Temporarily expand element to full width for accurate capture
+      const originalWidth = element.style.width;
+      const originalMaxWidth = element.style.maxWidth;
+      const parentEl = element.parentElement;
+      const originalParentPadding = parentEl ? parentEl.style.padding : "";
+      if (parentEl) parentEl.style.padding = "0";
+      element.style.width = "700px";
+      element.style.maxWidth = "700px";
+      element.style.margin = "0";
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
+        width: 700,
+        windowWidth: 700,
       });
+
+      // Restore original styles
+      element.style.width = originalWidth;
+      element.style.maxWidth = originalMaxWidth;
+      if (parentEl) parentEl.style.padding = originalParentPadding;
 
       const imgData = canvas.toDataURL("image/png");
       const imgWidth = canvas.width;
@@ -103,7 +120,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
       // A4 size in points: 595.28 x 841.89
       const pdfWidth = 595.28;
       const pdfHeight = 841.89;
-      const margin = 20; // points
+      const margin = 15;
 
       const contentWidth = pdfWidth - margin * 2;
       const ratio = contentWidth / imgWidth;
@@ -115,11 +132,10 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
         format: "a4",
       });
 
-      // If content fits on one page
       if (contentHeight <= pdfHeight - margin * 2) {
         pdf.addImage(imgData, "PNG", margin, margin, contentWidth, contentHeight);
       } else {
-        // Multi-page: slice the image
+        // Multi-page slicing
         const pageContentHeight = pdfHeight - margin * 2;
         const pageContentHeightPx = pageContentHeight / ratio;
         let yOffset = 0;
@@ -129,8 +145,6 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
           if (page > 0) pdf.addPage();
 
           const sliceHeight = Math.min(pageContentHeightPx, imgHeight - yOffset);
-
-          // Create a slice canvas
           const sliceCanvas = document.createElement("canvas");
           sliceCanvas.width = imgWidth;
           sliceCanvas.height = sliceHeight;
@@ -147,7 +161,6 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
         }
       }
 
-      // Generate filename
       const filename = `Invoice-${invoice.invoiceNumber}.pdf`;
       pdf.save(filename);
     } catch (error) {
@@ -187,9 +200,9 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
   const remainingBalance = invoice.price - dpAmount;
 
   return (
-    <div className="bg-gray-100">
+    <div className="bg-gray-100" data-invoice>
       {/* Action Buttons - fixed position, hidden on export */}
-      <div className="fixed bottom-6 right-6 z-50 no-print flex items-center gap-3">
+      <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:right-6 sm:left-auto z-50 no-print flex items-center gap-2 sm:gap-3 justify-center sm:justify-end">
         <Link
           href={`/admin/reservations/${id}`}
           className="flex items-center gap-2 px-4 py-3 bg-white text-gray-700 rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium active:scale-[0.98]"
@@ -204,7 +217,8 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
           {exporting ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Membuat PDF...
+              <span className="hidden sm:inline">Membuat PDF...</span>
+              <span className="sm:hidden">PDF...</span>
             </>
           ) : (
             <>
@@ -217,13 +231,13 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
         </button>
       </div>
 
-      {/* Invoice Document */}
-      <div className="max-w-[700px] mx-auto py-4 px-3 sm:px-4">
-        <div ref={invoiceRef} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* Invoice Document - full width on mobile */}
+      <div className="max-w-[700px] mx-auto py-3 sm:py-4 px-0 sm:px-4" data-invoice-doc>
+        <div ref={invoiceRef} className="bg-white sm:rounded-xl sm:shadow-sm sm:border sm:border-gray-200 overflow-hidden">
 
           {/* === HEADER === */}
-          <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-gray-200">
-            <div className="flex items-start justify-between gap-4">
+          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
               {/* Company Info - Logo */}
               <div className="flex items-center gap-3">
                 <Image
@@ -231,36 +245,38 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                   alt="Delft Apartment Logo"
                   width={48}
                   height={48}
-                  className="rounded-lg object-contain"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-contain flex-shrink-0"
                   priority
                 />
                 <div>
-                  <h1 className="text-base sm:text-lg font-bold text-[#1a2744] tracking-tight">DELFT APARTMENT</h1>
-                  <p className="text-[10px] text-gray-400">Kawasan CPI Makassar</p>
-                  <p className="text-[10px] text-gray-400">Telp: 0811-4128-05</p>
+                  <h1 className="text-sm sm:text-lg font-bold text-[#1a2744] tracking-tight">DELFT APARTMENT</h1>
+                  <p className="text-[10px] sm:text-[11px] text-gray-400">Kawasan CPI Makassar</p>
+                  <p className="text-[10px] sm:text-[11px] text-gray-400">Telp: 0811-4128-05</p>
                 </div>
               </div>
 
               {/* Invoice Meta */}
-              <div className="text-right flex-shrink-0">
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${badge.color} mb-2`}>
+              <div className="flex items-center sm:items-end justify-between sm:justify-end gap-3 sm:gap-0 sm:flex-col sm:text-right">
+                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${badge.color}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                   {badge.label}
                 </div>
-                <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5">Invoice</p>
-                <p className="text-sm font-bold text-gray-900 font-mono">{invoice.invoiceNumber}</p>
-                <p className="text-[9px] uppercase tracking-widest text-gray-400 mt-1 mb-0.5">Tanggal</p>
-                <p className="text-[11px] text-gray-600">{today}</p>
+                <div>
+                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5">Invoice</p>
+                  <p className="text-xs sm:text-sm font-bold text-gray-900 font-mono">{invoice.invoiceNumber}</p>
+                  <p className="text-[9px] uppercase tracking-widest text-gray-400 mt-1 mb-0.5">Tanggal</p>
+                  <p className="text-[11px] text-gray-600">{today}</p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* === BILL TO + KAMAR === */}
-          <div className="px-5 sm:px-6 py-3 grid grid-cols-2 gap-4 border-b border-gray-100">
+          <div className="px-4 sm:px-6 py-3 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-b border-gray-100">
             {/* Bill To */}
             <div>
               <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-1 font-semibold">Bill To</p>
-              <p className="text-xs font-bold text-gray-900">{invoice.guestName}</p>
+              <p className="text-xs sm:text-sm font-bold text-gray-900">{invoice.guestName}</p>
               {invoice.phone && (
                 <p className="text-[11px] text-gray-500 mt-0.5">Telp: {invoice.phone}</p>
               )}
@@ -269,7 +285,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
             {/* Room Info */}
             <div>
               <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-1 font-semibold">Kamar</p>
-              <p className="text-xs font-semibold text-gray-900">
+              <p className="text-xs sm:text-sm font-semibold text-gray-900">
                 {invoice.roomType} · Room {invoice.roomNumber}
               </p>
               <p className="text-[11px] text-gray-500 mt-0.5">
@@ -279,14 +295,14 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
           </div>
 
           {/* === LINE ITEMS TABLE === */}
-          <div className="px-5 sm:px-6">
-            <table className="w-full text-xs">
+          <div className="px-4 sm:px-6 overflow-x-auto">
+            <table className="w-full text-xs min-w-[320px]">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/80">
                   <th className="text-left py-2 font-semibold text-gray-500 uppercase tracking-wider text-[9px]">Deskripsi</th>
-                  <th className="text-center py-2 font-semibold text-gray-500 uppercase tracking-wider text-[9px]">Qty</th>
-                  <th className="text-right py-2 font-semibold text-gray-500 uppercase tracking-wider text-[9px]">Harga</th>
-                  <th className="text-right py-2 font-semibold text-gray-500 uppercase tracking-wider text-[9px]">Amount</th>
+                  <th className="text-center py-2 font-semibold text-gray-500 uppercase tracking-wider text-[9px] w-12">Qty</th>
+                  <th className="text-right py-2 font-semibold text-gray-500 uppercase tracking-wider text-[9px] w-24">Harga</th>
+                  <th className="text-right py-2 font-semibold text-gray-500 uppercase tracking-wider text-[9px] w-24">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -304,8 +320,8 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
           </div>
 
           {/* === TOTALS === */}
-          <div className="px-5 sm:px-6 py-3">
-            <div className="ml-auto w-56">
+          <div className="px-4 sm:px-6 py-3">
+            <div className="sm:ml-auto sm:w-56">
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Subtotal</span>
@@ -331,7 +347,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                   <div className="border-t border-gray-200 pt-1.5">
                     <div className="flex justify-between">
                       <span className="text-[11px] font-bold text-gray-700 uppercase">Total</span>
-                      <span className="text-base font-bold text-[#1a2744]">{formatPrice(invoice.price)}</span>
+                      <span className="text-sm sm:text-base font-bold text-[#1a2744]">{formatPrice(invoice.price)}</span>
                     </div>
                   </div>
                 )}
@@ -340,7 +356,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
                   <div className="border-t border-gray-200 pt-1.5">
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-bold text-gray-700 uppercase">Yang Dibayar</span>
-                      <span className="text-base font-bold text-[#1a2744]">{formatPrice(remainingBalance)}</span>
+                      <span className="text-sm sm:text-base font-bold text-[#1a2744]">{formatPrice(remainingBalance)}</span>
                     </div>
                   </div>
                 )}
@@ -350,7 +366,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
 
           {/* === NOTES === */}
           {invoice.notes && (
-            <div className="px-5 sm:px-6 pb-3">
+            <div className="px-4 sm:px-6 pb-3">
               <div className="bg-gray-50 rounded-md px-3 py-2 border border-gray-100">
                 <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-0.5 font-semibold">Catatan</p>
                 <p className="text-[11px] text-gray-600">{invoice.notes}</p>
@@ -359,20 +375,20 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
           )}
 
           {/* === PAYMENT STATUS === */}
-          <div className={`mx-5 sm:mx-6 mb-4 rounded-md px-3 py-2 flex items-center gap-2 ${watermark.bgColor} border ${invoice.status === "lunas" ? "border-emerald-200" : invoice.status === "dp" ? "border-amber-200" : "border-blue-200"}`}>
+          <div className={`mx-4 sm:mx-6 mb-3 sm:mb-4 rounded-md px-3 py-2 flex items-center gap-2 ${watermark.bgColor} border ${invoice.status === "lunas" ? "border-emerald-200" : invoice.status === "dp" ? "border-amber-200" : "border-blue-200"}`}>
             <span className="text-sm">
               {invoice.status === "lunas" ? "✅" : invoice.status === "dp" ? "⏳" : "📋"}
             </span>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className={`text-[11px] font-bold ${watermark.textColor}`}>{watermark.text}</p>
               {isDP && (
-                <p className="text-[10px] text-gray-500">DP: {formatPrice(dpAmount)} · Sisa: {formatPrice(remainingBalance)}</p>
+                <p className="text-[10px] text-gray-500 truncate">DP: {formatPrice(dpAmount)} · Sisa: {formatPrice(remainingBalance)}</p>
               )}
             </div>
           </div>
 
           {/* === FOOTER === */}
-          <div className="border-t border-gray-200 px-5 sm:px-6 py-2.5 bg-gray-50/80">
+          <div className="border-t border-gray-200 px-4 sm:px-6 py-2.5 bg-gray-50/80">
             <div className="flex items-center justify-between">
               <p className="text-[9px] text-gray-400">Dicetak otomatis oleh sistem DELFT APARTMENT</p>
               <p className="text-[9px] text-gray-400">Terima kasih 🙏</p>
@@ -380,6 +396,9 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
       </div>
+
+      {/* Bottom spacer for fixed buttons */}
+      <div className="h-20 sm:h-6 no-print" />
     </div>
   );
 }

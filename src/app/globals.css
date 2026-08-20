@@ -138,27 +138,19 @@ a[role="button"],
   }
 }
 
-/* ===== PREVENT OVERSCROLL BOUNCE ON iOS ===== */
-@supports (-webkit-touch-callout: none) {
-  body {
-    position: fixed;
-    width: 100%;
-    min-height: 100%;
-  }
-  #root,
-  #__next {
-    min-height: 100vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
 /* ===== RESPONSIVE TABLE HELPERS ===== */
 @media (max-width: 767px) {
   table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ===== INVOICE FULL-WIDTH ON MOBILE ===== */
+@media (max-width: 639px) {
+  [data-invoice-doc] .bg-white {
+    border-radius: 0 !important;
   }
 }
 
@@ -176,24 +168,28 @@ a[role="button"],
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
     height: auto !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   @page {
-    margin: 0.3cm;
+    margin: 0.4cm;
     size: A4;
   }
   /* Kill all min-height, min-width to prevent extra pages */
   *, *::before, *::after {
     min-height: 0 !important;
     min-width: 0 !important;
+    max-height: none !important;
     height: auto !important;
+    overflow: visible !important;
     page-break-inside: avoid !important;
     page-break-after: avoid !important;
     page-break-before: avoid !important;
   }
-  /* Force all backgrounds to white */
+  /* Force backgrounds */
   .bg-gray-50, .bg-gray-100, .bg-gray-200 {
     background-color: white !important;
   }
@@ -207,12 +203,15 @@ a[role="button"],
   div[class*="min-h-screen"] {
     min-height: 0 !important;
     height: auto !important;
+    overflow: visible !important;
   }
   /* Invoice wrapper - no extra height */
   [data-invoice] {
     min-height: 0 !important;
     height: auto !important;
     background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
   /* Invoice doc container - fill page width */
   [data-invoice-doc] {
@@ -221,6 +220,11 @@ a[role="button"],
     margin: 0 !important;
     width: 100% !important;
   }
+  [data-invoice-doc] > div {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
   /* Fixed buttons - hide */
   div[class*="fixed"] {
     display: none !important;
@@ -228,5 +232,11 @@ a[role="button"],
   /* Remove bg-gray-100 from invoice wrapper */
   .bg-gray-100 {
     background-color: transparent !important;
+  }
+  /* Table - no scroll in print */
+  table {
+    display: table !important;
+    overflow: visible !important;
+    width: 100% !important;
   }
 }
