@@ -45,8 +45,9 @@ export default function ReservationsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchReservations = () => {
     fetch("/api/reservations")
       .then((r) => r.json())
       .then((data) => {
@@ -54,7 +55,25 @@ export default function ReservationsPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchReservations();
   }, []);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Yakin ingin menghapus reservasi "${name}"?`)) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/reservations/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Gagal menghapus");
+      setReservations((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      alert("Gagal menghapus reservasi");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = reservations.filter((r) => {
     if (filter !== "all" && r.status !== filter) return false;
@@ -163,22 +182,29 @@ export default function ReservationsPage() {
                           {st.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-1">
                           <Link
                             href={`/admin/reservations/${r.id}`}
-                            className="text-gold hover:underline text-sm font-medium"
+                            className="px-2.5 py-1.5 text-xs font-medium text-gold hover:bg-gold/10 rounded-lg transition-colors"
                           >
-                            Detail
+                            ✏️ Edit
                           </Link>
                           {r.invoiceNumber && (
                             <Link
                               href={`/admin/invoice/${r.id}`}
-                              className="text-blue-500 hover:underline text-sm font-medium"
+                              className="px-2.5 py-1.5 text-xs font-medium text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                             >
-                              Invoice
+                              🧾 Invoice
                             </Link>
                           )}
+                          <button
+                            onClick={() => handleDelete(r.id, r.guestName)}
+                            disabled={deletingId === r.id}
+                            className="px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {deletingId === r.id ? "..." : "🗑️"}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -201,10 +227,9 @@ export default function ReservationsPage() {
           filtered.map((r) => {
             const st = statusConfig[r.status] || statusConfig.menunggu_pembayaran;
             return (
-              <Link
+              <div
                 key={r.id}
-                href={`/admin/reservations/${r.id}`}
-                className="block bg-white rounded-xl border border-gray-100 p-4 hover:border-gold/30 transition-colors active:scale-[0.98]"
+                className="bg-white rounded-xl border border-gray-100 p-4"
               >
                 {/* Top row: name + status */}
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -230,28 +255,50 @@ export default function ReservationsPage() {
                 </div>
 
                 {/* Dates */}
-                <div className="flex items-center text-xs text-gray-500 gap-1 mb-2.5">
+                <div className="flex items-center text-xs text-gray-500 gap-1 mb-3">
                   <span>{formatDate(r.checkIn)}</span>
                   <span className="text-gray-300">→</span>
                   <span>{formatDate(r.checkOut)}</span>
                 </div>
 
-                {/* Bottom row: price + actions */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-gray-100">
-                  <div>
-                    <span className="font-bold text-sm text-gray-900">{formatPrice(r.price)}</span>
-                    {r.status === "dp" && r.dpAmount > 0 && (
-                      <p className="text-[11px] text-yellow-600 font-medium">DP: {formatPrice(r.dpAmount)}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {r.invoiceNumber && (
-                      <span className="text-xs text-blue-500 font-medium">🧾 Invoice</span>
-                    )}
-                    <span className="text-xs text-gold font-medium">Detail →</span>
-                  </div>
+                {/* Price */}
+                <div className="mb-3">
+                  <span className="font-bold text-sm text-gray-900">{formatPrice(r.price)}</span>
+                  {r.status === "dp" && r.dpAmount > 0 && (
+                    <p className="text-[11px] text-yellow-600 font-medium">DP: {formatPrice(r.dpAmount)}</p>
+                  )}
                 </div>
-              </Link>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                  <Link
+                    href={`/admin/reservations/${r.id}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gold text-white text-xs font-semibold rounded-lg hover:bg-gold-dark transition-colors active:scale-[0.98]"
+                  >
+                    ✏️ Edit
+                  </Link>
+                  {r.invoiceNumber && (
+                    <Link
+                      href={`/admin/invoice/${r.id}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-blue-50 text-blue-600 text-xs font-semibold rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors active:scale-[0.98]"
+                    >
+                      🧾 Invoice
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => handleDelete(r.id, r.guestName)}
+                    disabled={deletingId === r.id}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-50 text-red-500 text-xs font-semibold rounded-lg border border-red-200 hover:bg-red-100 transition-colors active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {deletingId === r.id ? (
+                      <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      "🗑️"
+                    )}
+                    Hapus
+                  </button>
+                </div>
+              </div>
             );
           })
         )}
