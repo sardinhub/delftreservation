@@ -1,26 +1,104 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf9f6;
+  --foreground: #1a1a2e;
+  --gold: #b8860b;
+  --gold-light: #d4a84b;
+  --gold-dark: #8b6508;
+  --navy: #1a1a2e;
+  --navy-light: #16213e;
+  --cream: #faf9f6;
+  --warm-gray: #f5f0eb;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-dark: var(--gold-dark);
+  --color-navy: var(--navy);
+  --color-navy-light: var(--navy-light);
+  --color-cream: var(--cream);
+  --color-warm-gray: var(--warm-gray);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--warm-gray);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 3px;
+}
+
+/* Gradient text utility */
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card hover effect */
+.card-luxury {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(184, 134, 11, 0.15);
+}
+.card-luxury:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(184, 134, 11, 0.15);
+  border-color: rgba(184, 134, 11, 0.3);
+}
+
+/* Status badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+.badge-approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+.badge-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.badge-invoice {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.badge-paid {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.badge-confirmed {
+  background: #a7f3d0;
+  color: #064e3b;
+}
+.badge-cancelled {
+  background: #e5e7eb;
+  color: #374151;
 }
