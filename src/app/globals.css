@@ -63,42 +63,12 @@ body {
   border-color: rgba(184, 134, 11, 0.3);
 }
 
-/* Status badges */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.badge-pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-.badge-approved {
-  background: #d1fae5;
-  color: #065f46;
-}
-.badge-rejected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-.badge-invoice {
-  background: #dbeafe;
-  color: #1e40af;
-}
-.badge-paid {
-  background: #e0e7ff;
-  color: #3730a3;
-}
-.badge-confirmed {
-  background: #a7f3d0;
-  color: #064e3b;
-}
-.badge-cancelled {
-  background: #e5e7eb;
-  color: #374151;
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
 }

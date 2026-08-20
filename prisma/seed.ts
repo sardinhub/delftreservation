@@ -1,106 +1,48 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
-import { resolve } from "path";
+import { createClient } from "@libsql/client";
+import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
 
-function createPrismaClient() {
-  const dbUrl = process.env.DATABASE_URL;
+const generateId = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 25);
 
-  if (dbUrl && dbUrl.startsWith("libsql://")) {
-    const authToken = process.env.TURSO_AUTH_TOKEN || "";
-    const adapter = new PrismaLibSql({ url: dbUrl, authToken });
-    return new PrismaClient({ adapter });
-  }
+const url = process.env.DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
-  const dbPath = resolve("dev.db");
-  const adapter = new PrismaLibSql({ url: `file:${dbPath}` });
-  return new PrismaClient({ adapter });
+if (!url || !authToken) {
+  console.error("DATABASE_URL and TURSO_AUTH_TOKEN required");
+  process.exit(1);
 }
 
-const prisma = createPrismaClient();
+const client = createClient({ url, authToken });
 
-async function main() {
+async function seed() {
   console.log("🌱 Seeding database...");
 
-  // Clear existing data
-  await prisma.payment.deleteMany();
-  await prisma.reservation.deleteMany();
-  await prisma.room.deleteMany();
-  await prisma.admin.deleteMany();
+  // Create rooms
+  const rooms = [
+    { id: generateId(), name: "Room 101", description: "Kamar nyaman di lantai 1. Queen bed, AC, WiFi, dan kamar mandi pribadi." },
+    { id: generateId(), name: "Room 102", description: "Kamar di lantai 1 dengan dekorasi modern. Queen bed, AC, WiFi, dan kamar mandi pribadi." },
+    { id: generateId(), name: "Room 201", description: "Kamar premium di lantai 2 dengan pemandangan kota. King bed, AC, WiFi, dan bathtub." },
+    { id: generateId(), name: "Room 202", description: "Kamar executive di lantai 2. King bed, AC, WiFi, workspace, dan bathtub." },
+  ];
 
-  // Create 4 apartment rooms
-  const rooms = await Promise.all([
-    prisma.room.create({
-      data: {
-        name: "Room 101",
-        description:
-          "Kamar premium dengan pemandangan langsung ke laut CPI Makassar. Dilengkapi queen bed, AC, WiFi, dan kamar mandi pribadi.",
-        price: 500000,
-        floor: 1,
-        status: "available",
-        image: "/rooms/room-101.jpg",
-      },
-    }),
-    prisma.room.create({
-      data: {
-        name: "Room 102",
-        description:
-          "Kamar nyaman di lantai 1 dengan dekorasi modern. Queen bed, AC, WiFi, dan kamar mandi pribadi. Cocok untuk pasangan.",
-        price: 500000,
-        floor: 1,
-        status: "available",
-        image: "/rooms/room-102.jpg",
-      },
-    }),
-    prisma.room.create({
-      data: {
-        name: "Room 201",
-        description:
-          "Kamar mewah di lantai 2 dengan view kolam renang. King bed, Smart TV, AC, WiFi, dan balkon pribadi.",
-        price: 650000,
-        floor: 2,
-        status: "available",
-        image: "/rooms/room-201.jpg",
-      },
-    }),
-    prisma.room.create({
-      data: {
-        name: "Room 202",
-        description:
-          "Suite eksklusif di lantai 2. King bed, ruang tamu kecil, Smart TV, AC, WiFi, dan balkon dengan sunset view.",
-        price: 750000,
-        floor: 2,
-        status: "available",
-        image: "/rooms/room-202.jpg",
-      },
-    }),
-  ]);
+  for (const room of rooms) {
+    await client.execute({
+      sql: "INSERT INTO Room (id, name, description) VALUES (?, ?, ?)",
+      args: [room.id, room.name, room.description],
+    });
+    console.log(`  ✅ Room: ${room.name}`);
+  }
 
-  console.log(
-    "✅ Created 4 rooms:",
-    rooms.map((r) => r.name).join(", ")
-  );
-
-  // Create admin user (password: admin123)
+  // Create admin
   const hashedPassword = await bcrypt.hash("admin123", 10);
-  const admin = await prisma.admin.create({
-    data: {
-      username: "admin",
-      password: hashedPassword,
-      name: "Delft Admin",
-      role: "superadmin",
-    },
+  const adminId = generateId();
+  await client.execute({
+    sql: "INSERT INTO Admin (id, username, password, name, role) VALUES (?, ?, ?, ?, ?)",
+    args: [adminId, "admin", hashedPassword, "Administrator", "admin"],
   });
+  console.log("  ✅ Admin: admin / admin123");
 
-  console.log("✅ Created admin user:", admin.username);
-  console.log("🎉 Seed complete!");
+  console.log("\n🎉 Seed complete!");
 }
 
-main()
-  .catch((e) => {
-    console.error("❌ Seed failed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+seed().catch(console.error);

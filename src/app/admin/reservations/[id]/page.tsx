@@ -7,29 +7,14 @@ import Link from "next/link";
 interface Reservation {
   id: string;
   guestName: string;
-  guestNik: string;
-  guestPhone: string;
-  guestEmail: string | null;
   checkIn: string;
   checkOut: string;
-  totalNights: number;
-  totalPrice: number;
+  price: number;
   status: string;
-  accessCode: string | null;
   invoiceNumber: string | null;
   notes: string | null;
   createdAt: string;
-  room: { id: string; name: string; floor: number; price: number };
-  payment: {
-    id: string;
-    amount: number;
-    proofImage: string | null;
-    proofData: string | null;
-    bankName: string | null;
-    accountName: string | null;
-    verifiedByAdmin: boolean;
-    transferDate: string | null;
-  } | null;
+  room: { id: string; name: string };
 }
 
 function formatPrice(price: number): string {
@@ -49,43 +34,44 @@ function formatDate(date: string): string {
   });
 }
 
-const statusBadges: Record<string, string> = {
-  pending_approval: "badge-pending",
-  approved: "badge-approved",
-  rejected: "badge-rejected",
-  invoice_issued: "badge-invoice",
-  paid: "badge-paid",
-  confirmed: "badge-confirmed",
-  cancelled: "badge-cancelled",
+const statusConfig: Record<string, { label: string; color: string }> = {
+  lunas: { label: "Lunas", color: "bg-green-100 text-green-700" },
+  dp: { label: "DP", color: "bg-yellow-100 text-yellow-700" },
+  menunggu_pembayaran: { label: "Menunggu Pembayaran", color: "bg-gray-100 text-gray-600" },
 };
 
-const statusLabels: Record<string, string> = {
-  pending_approval: "Menunggu Review",
-  approved: "Disetujui",
-  rejected: "Ditolak",
-  invoice_issued: "Invoice Diterbitkan",
-  paid: "Dibayar",
-  confirmed: "Terkonfirmasi",
-  cancelled: "Dibatalkan",
-};
-
-export default function AdminReservationDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function ReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  const [form, setForm] = useState({
+    guestName: "",
+    roomId: "",
+    checkIn: "",
+    checkOut: "",
+    price: "",
+    status: "",
+    notes: "",
+  });
+
   const fetchReservation = () => {
-    fetch(`/api/reservations?id=${id}`)
+    fetch(`/api/reservations/${id}`)
       .then((r) => r.json())
       .then((data) => {
         setReservation(data);
+        setForm({
+          guestName: data.guestName,
+          roomId: data.roomId,
+          checkIn: data.checkIn.split("T")[0],
+          checkOut: data.checkOut.split("T")[0],
+          price: String(data.price),
+          status: data.status,
+          notes: data.notes || "",
+        });
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -95,77 +81,54 @@ export default function AdminReservationDetailPage({
     fetchReservation();
   }, [id]);
 
-  const handleApprove = async () => {
-    setActionLoading(true);
+  const handleSave = async () => {
+    setSaving(true);
     setMessage({ type: "", text: "" });
     try {
-      const res = await fetch(`/api/reservations/${id}/approve`, {
-        method: "POST",
+      const res = await fetch(`/api/reservations/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          guestName: form.guestName,
+          roomId: form.roomId,
+          checkIn: form.checkIn,
+          checkOut: form.checkOut,
+          price: parseInt(form.price),
+          status: form.status,
+          notes: form.notes || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setMessage({ type: "success", text: "Reservasi berhasil di-approve!" });
+      setMessage({ type: "success", text: "Berhasil disimpan!" });
       fetchReservation();
     } catch (err) {
-      setMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Gagal approve",
-      });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Gagal menyimpan" });
     } finally {
-      setActionLoading(false);
+      setSaving(false);
     }
   };
 
-  const handleReject = async () => {
-    if (!confirm("Yakin ingin menolak reservasi ini?")) return;
-    setActionLoading(true);
-    setMessage({ type: "", text: "" });
+  const handleDelete = async () => {
+    if (!confirm("Yakin ingin menghapus reservasi ini?")) return;
     try {
-      const res = await fetch(`/api/reservations/${id}/reject`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: "Ditolak oleh admin" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setMessage({ type: "success", text: "Reservasi ditolak." });
-      fetchReservation();
-    } catch (err) {
-      setMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Gagal menolak",
-      });
-    } finally {
-      setActionLoading(false);
+      const res = await fetch(`/api/reservations/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Gagal menghapus");
+      router.push("/admin/reservations");
+    } catch {
+      alert("Gagal menghapus reservasi");
     }
   };
 
-  const handleConfirm = async () => {
-    if (!confirm("Konfirmasi pembayaran dan generate kode akses?")) return;
-    setActionLoading(true);
-    setMessage({ type: "", text: "" });
+  const generateInvoice = async () => {
     try {
-      const res = await fetch(`/api/reservations/${id}/confirm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
+      const res = await fetch(`/api/reservations/${id}/invoice`, { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setMessage({
-        type: "success",
-        text: `Berhasil! Kode akses: ${data.accessCode}`,
-      });
+      setMessage({ type: "success", text: `Invoice ${data.invoiceNumber} berhasil dibuat!` });
       fetchReservation();
     } catch (err) {
-      setMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Gagal konfirmasi",
-      });
-    } finally {
-      setActionLoading(false);
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Gagal membuat invoice" });
     }
   };
 
@@ -183,34 +146,29 @@ export default function AdminReservationDetailPage({
         <p className="text-2xl mb-2">😕</p>
         <p className="text-gray-500">Reservasi tidak ditemukan</p>
         <Link href="/admin/reservations" className="text-gold hover:underline text-sm mt-2 inline-block">
-          ← Kembali ke daftar
+          ← Kembali
         </Link>
       </div>
     );
   }
 
+  const st = statusConfig[form.status] || statusConfig.menunggu_pembayaran;
+
   return (
-    <div>
-      {/* Header */}
+    <div className="max-w-3xl mx-auto">
       <div className="flex items-center gap-4 mb-6">
-        <Link
-          href="/admin/reservations"
-          className="text-gray-400 hover:text-gold transition-colors"
-        >
+        <Link href="/admin/reservations" className="text-gray-400 hover:text-gold">
           ←
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-navy">
-            Detail Reservasi
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Detail Reservasi</h1>
           <p className="text-sm text-gray-400 font-mono">{reservation.id}</p>
         </div>
-        <span className={`badge ${statusBadges[reservation.status]}`}>
-          {statusLabels[reservation.status] || reservation.status}
+        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${st.color}`}>
+          {st.label}
         </span>
       </div>
 
-      {/* Message */}
       {message.text && (
         <div
           className={`px-4 py-3 rounded-xl mb-6 text-sm ${
@@ -223,203 +181,110 @@ export default function AdminReservationDetailPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Guest Info */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <h2 className="font-bold text-navy mb-4">Data Tamu</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-400">Nama</p>
-                <p className="font-medium text-navy">{reservation.guestName}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">NIK/KTP</p>
-                <p className="font-mono text-navy">{reservation.guestNik}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">No. HP</p>
-                <p className="text-navy">{reservation.guestPhone}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Email</p>
-                <p className="text-navy">{reservation.guestEmail || "-"}</p>
-              </div>
+      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
+        <h2 className="font-bold text-gray-900 mb-4">Data Reservasi</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Tamu</label>
+            <input
+              type="text"
+              value={form.guestName}
+              onChange={(e) => setForm({ ...form, guestName: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Check-in</label>
+              <input
+                type="date"
+                value={form.checkIn}
+                onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Check-out</label>
+              <input
+                type="date"
+                value={form.checkOut}
+                onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+              />
             </div>
           </div>
 
-          {/* Reservation Details */}
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <h2 className="font-bold text-navy mb-4">Detail Booking</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-400">Kamar</p>
-                <p className="font-medium text-navy">
-                  {reservation.room.name} (Lantai {reservation.room.floor})
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-400">Harga/Malam</p>
-                <p className="text-navy">{formatPrice(reservation.room.price)}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Check-in</p>
-                <p className="text-navy">{formatDate(reservation.checkIn)}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Check-out</p>
-                <p className="text-navy">{formatDate(reservation.checkOut)}</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Durasi</p>
-                <p className="text-navy">{reservation.totalNights} malam</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Total</p>
-                <p className="font-bold text-gold text-lg">
-                  {formatPrice(reservation.totalPrice)}
-                </p>
-              </div>
-              {reservation.invoiceNumber && (
-                <div className="col-span-2">
-                  <p className="text-gray-400">Invoice</p>
-                  <p className="font-mono font-semibold text-navy">
-                    {reservation.invoiceNumber}
-                  </p>
-                </div>
-              )}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Harga (Rp)</label>
+              <input
+                type="number"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none bg-white"
+              >
+                <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
+                <option value="dp">DP</option>
+                <option value="lunas">Lunas</option>
+              </select>
             </div>
           </div>
 
-          {/* Payment Proof */}
-          {reservation.payment && (
-            <div className="bg-white rounded-xl p-6 border border-gray-100">
-              <h2 className="font-bold text-navy mb-4">Bukti Pembayaran</h2>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                <div>
-                  <p className="text-gray-400">Bank</p>
-                  <p className="text-navy">{reservation.payment.bankName || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Atas Nama</p>
-                  <p className="text-navy">{reservation.payment.accountName || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Jumlah</p>
-                  <p className="text-navy font-semibold">
-                    {formatPrice(reservation.payment.amount)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Status Verifikasi</p>
-                  <span
-                    className={`badge ${reservation.payment.verifiedByAdmin ? "badge-confirmed" : "badge-pending"}`}
-                  >
-                    {reservation.payment.verifiedByAdmin
-                      ? "Terverifikasi"
-                      : "Belum Diverifikasi"}
-                  </span>
-                </div>
-              </div>
-              {(reservation.payment.proofData || (reservation.payment.proofImage &&
-                reservation.payment.proofImage !==
-                  "/uploads/payments/placeholder.jpg")) && (
-                  <div className="mt-3">
-                    <img
-                      src={reservation.payment.proofData || reservation.payment.proofImage || ""}
-                      alt="Bukti Transfer"
-                      className="max-w-sm rounded-lg border border-gray-200"
-                    />
-                  </div>
-                )}
-            </div>
-          )}
-
-          {/* Access Code */}
-          {reservation.accessCode && (
-            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-              <h2 className="font-bold text-green-700 mb-2">Kode Akses</h2>
-              <p className="text-3xl font-mono font-bold text-green-800 tracking-[0.2em]">
-                {reservation.accessCode}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Actions Sidebar */}
-        <div className="space-y-6">
-          {/* Action Buttons */}
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <h2 className="font-bold text-navy mb-4">Aksi</h2>
-            <div className="space-y-3">
-              {reservation.status === "pending_approval" && (
-                <>
-                  <button
-                    onClick={handleApprove}
-                    disabled={actionLoading}
-                    className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all disabled:opacity-50"
-                  >
-                    {actionLoading ? "Memproses..." : "✓ Approve & Buat Invoice"}
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    disabled={actionLoading}
-                    className="w-full py-3 bg-red-50 text-red-600 font-semibold rounded-xl border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50"
-                  >
-                    ✕ Tolak Reservasi
-                  </button>
-                </>
-              )}
-
-              {reservation.status === "paid" && (
-                <button
-                  onClick={handleConfirm}
-                  disabled={actionLoading}
-                  className="w-full py-3 bg-gradient-to-r from-gold to-gold-dark text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-gold/25 transition-all disabled:opacity-50"
-                >
-                  {actionLoading
-                    ? "Memproses..."
-                    : "🔑 Konfirmasi & Generate Kode Akses"}
-                </button>
-              )}
-
-              {!["pending_approval", "paid"].includes(reservation.status) && (
-                <p className="text-center text-gray-400 text-sm py-4">
-                  Tidak ada aksi yang tersedia untuk status ini.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* WhatsApp Contact */}
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <h2 className="font-bold text-navy mb-3">Hubungi Tamu</h2>
-            <a
-              href={`https://wa.me/62${reservation.guestPhone.replace(/^0/, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-all"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-              Chat WhatsApp
-            </a>
-          </div>
-
-          {/* Timestamps */}
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <h2 className="font-bold text-navy mb-3">Riwayat</h2>
-            <div className="text-sm space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Dibuat</span>
-                <span className="text-navy">
-                  {new Date(reservation.createdAt).toLocaleDateString("id-ID")}
-                </span>
-              </div>
-            </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Catatan</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none resize-none"
+              rows={3}
+            />
           </div>
         </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-6 py-3 bg-gold text-white font-semibold rounded-xl hover:bg-gold-dark transition-all disabled:opacity-50"
+        >
+          {saving ? "Menyimpan..." : "💾 Simpan Perubahan"}
+        </button>
+
+        {form.status === "lunas" && !reservation.invoiceNumber && (
+          <button
+            onClick={generateInvoice}
+            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all"
+          >
+            🧾 Buat Invoice
+          </button>
+        )}
+
+        {reservation.invoiceNumber && (
+          <Link
+            href={`/admin/invoice/${reservation.id}`}
+            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all text-center"
+          >
+            🧾 Lihat Invoice
+          </Link>
+        )}
+
+        <button
+          onClick={handleDelete}
+          className="px-6 py-3 bg-red-50 text-red-600 font-semibold rounded-xl border border-red-200 hover:bg-red-100 transition-all ml-auto"
+        >
+          🗑️ Hapus
+        </button>
       </div>
     </div>
   );

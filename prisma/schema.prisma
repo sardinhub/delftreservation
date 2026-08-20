@@ -8,12 +8,8 @@ datasource db {
 
 model Room {
   id          String  @id @default(cuid())
-  name        String
+  name        String  @unique
   description String
-  price       Int     // Price in IDR (e.g., 500000 = Rp 500.000)
-  image       String?
-  floor       Int
-  status      String  @default("available") // available, maintenance, unavailable
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -23,43 +19,17 @@ model Room {
 model Reservation {
   id            String   @id @default(cuid())
   guestName     String
-  guestNik      String   // NIK/KTP number
-  guestPhone    String
-  guestEmail    String?
   checkIn       DateTime
   checkOut      DateTime
-  totalNights   Int
-  totalPrice    Int      // Total in IDR
-  status        String  @default("pending_approval") // pending_approval, approved, rejected, invoice_issued, paid, confirmed, cancelled
-  approvedAt    DateTime? // When admin approved (for 3-hour payment expiry)
-  accessCode    String?  // Smart lock access code
-  invoiceNumber String?  // Generated invoice number
+  price         Int      // Harga kamar (input manual oleh admin)
+  status        String   @default("menunggu_pembayaran") // menunggu_pembayaran, dp, lunas
+  invoiceNumber String?
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   room   Room    @relation(fields: [roomId], references: [id])
   roomId String
-
-  payment Payment?
-}
-
-model Payment {
-  id              String   @id @default(cuid())
-  amount          Int      // Amount paid in IDR
-  proofImage      String?  // Path to uploaded payment proof (legacy)
-  proofData       String?  // Base64-encoded payment proof image
-  bankName        String?
-  accountName     String?
-  transferDate    DateTime?
-  verifiedByAdmin Boolean  @default(false)
-  verifiedAt      DateTime?
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
-  reservationId String      @unique
 }
 
 model Admin {
@@ -67,7 +37,7 @@ model Admin {
   username  String   @unique
   password  String   // bcrypt hashed
   name      String
-  role      String   @default("admin") // admin, superadmin
+  role      String   @default("admin")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
