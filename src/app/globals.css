@@ -172,13 +172,15 @@ a[role="button"],
   .no-print {
     display: none !important;
   }
-  body {
-    background: white;
+  html, body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   @page {
-    margin: 0.4cm;
+    margin: 0.3cm;
     size: A4;
   }
   .print\:block {
@@ -199,13 +201,29 @@ a[role="button"],
   .print\:max-w-none {
     max-width: 100% !important;
   }
-  /* Force single page */
-  * {
-    page-break-inside: avoid;
+  .print\:bg-white {
+    background: white !important;
   }
-  /* Shrink spacing for print */
-  .bg-white {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+  .print\:min-h-0 {
+    min-height: 0 !important;
+  }
+  .print\:m-0 {
+    margin: 0 !important;
+  }
+  /* Prevent any page breaks */
+  * {
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+  }
+  /* Remove all extra spacing */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  /* Hide everything except invoice */
+  body > *:not(:has(.print\:block)):not(:has([class*="invoice"])) {
+    /* Don't hide invoice container */
   }
 }

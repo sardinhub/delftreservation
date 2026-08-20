@@ -109,7 +109,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
   const remainingBalance = invoice.price - dpAmount;
 
   return (
-    <div className="min-h-screen bg-gray-100 print:bg-white">
+    <div className="bg-gray-100 print:bg-white print:min-h-0">
       {/* Print Button - fixed position, hidden on print */}
       <div className="fixed bottom-6 right-6 z-50 no-print">
         <Link
@@ -130,7 +130,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
       </div>
 
       {/* Invoice Document - compact for single page */}
-      <div className="max-w-[700px] mx-auto py-4 px-3 print:py-0 print:px-0 print:max-w-none">
+      <div className="max-w-[700px] mx-auto py-4 px-3 sm:px-4 print:py-0 print:px-0 print:max-w-none print:m-0">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-none print:rounded-none">
 
           {/* === HEADER === */}

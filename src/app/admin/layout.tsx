@@ -64,9 +64,9 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 print:bg-white print:min-h-0">
       {/* Top Nav */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Left: Logo + Desktop Nav */}
@@ -130,14 +130,14 @@ export default function AdminLayout({
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/30 z-30 sm:hidden"
+          className="fixed inset-0 bg-black/30 z-30 sm:hidden no-print"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* Mobile Menu Drawer */}
       <div
-        className={`fixed top-14 sm:top-16 right-0 w-64 bg-white border-l border-b border-gray-200 shadow-xl z-30 transform transition-transform duration-200 sm:hidden ${
+        className={`fixed top-14 sm:top-16 right-0 w-64 bg-white border-l border-b border-gray-200 shadow-xl z-30 transform transition-transform duration-200 sm:hidden no-print ${
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -170,7 +170,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 sm:py-6 lg:py-8 py-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 sm:py-6 lg:py-8 py-4 print:p-0 print:max-w-none print:m-0">
         {children}
       </main>
     </div>
