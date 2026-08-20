@@ -19,6 +19,8 @@ model Room {
 model Reservation {
   id            String   @id @default(cuid())
   guestName     String
+  roomType      String   // Type kamar (input manual oleh admin)
+  roomNumber    String   // Nomor kamar (input manual oleh admin)
   checkIn       DateTime
   checkOut      DateTime
   price         Int      // Harga kamar (input manual oleh admin)
@@ -28,8 +30,8 @@ model Reservation {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  room   Room    @relation(fields: [roomId], references: [id])
-  roomId String
+  room   Room?   @relation(fields: [roomId], references: [id])
+  roomId String?
 }
 
 model Admin {

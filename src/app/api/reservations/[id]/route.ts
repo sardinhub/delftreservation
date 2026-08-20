@@ -10,7 +10,6 @@ export async function GET(
     const { id } = await params;
     const reservation = await prisma.reservation.findUnique({
       where: { id },
-      include: { room: { select: { id: true, name: true } } },
     });
 
     if (!reservation) {
@@ -32,7 +31,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { guestName, roomId, checkIn, checkOut, price, status, notes } = body;
+    const { guestName, roomType, roomNumber, checkIn, checkOut, price, status, notes } = body;
 
     const existing = await prisma.reservation.findUnique({ where: { id } });
     if (!existing) {
@@ -43,14 +42,14 @@ export async function PUT(
       where: { id },
       data: {
         ...(guestName && { guestName }),
-        ...(roomId && { roomId }),
+        ...(roomType !== undefined && { roomType }),
+        ...(roomNumber !== undefined && { roomNumber }),
         ...(checkIn && { checkIn: new Date(checkIn) }),
         ...(checkOut && { checkOut: new Date(checkOut) }),
         ...(price && { price: parseInt(price) }),
         ...(status && { status }),
         ...(notes !== undefined && { notes: notes || null }),
       },
-      include: { room: { select: { id: true, name: true } } },
     });
 
     return NextResponse.json(updated);

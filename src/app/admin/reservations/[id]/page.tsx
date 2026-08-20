@@ -7,6 +7,8 @@ import Link from "next/link";
 interface Reservation {
   id: string;
   guestName: string;
+  roomType: string;
+  roomNumber: string;
   checkIn: string;
   checkOut: string;
   price: number;
@@ -14,7 +16,6 @@ interface Reservation {
   invoiceNumber: string | null;
   notes: string | null;
   createdAt: string;
-  room: { id: string; name: string };
 }
 
 function formatPrice(price: number): string {
@@ -50,7 +51,8 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
 
   const [form, setForm] = useState({
     guestName: "",
-    roomId: "",
+    roomType: "",
+    roomNumber: "",
     checkIn: "",
     checkOut: "",
     price: "",
@@ -65,7 +67,8 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         setReservation(data);
         setForm({
           guestName: data.guestName,
-          roomId: data.roomId,
+          roomType: data.roomType || "",
+          roomNumber: data.roomNumber || "",
           checkIn: data.checkIn.split("T")[0],
           checkOut: data.checkOut.split("T")[0],
           price: String(data.price),
@@ -90,7 +93,8 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           guestName: form.guestName,
-          roomId: form.roomId,
+          roomType: form.roomType,
+          roomNumber: form.roomNumber,
           checkIn: form.checkIn,
           checkOut: form.checkOut,
           price: parseInt(form.price),
@@ -197,7 +201,31 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
             />
           </div>
 
-          {/* Dates — stack on mobile, side-by-side on desktop */}
+          {/* Type Kamar + Room Number */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Type Kamar</label>
+              <input
+                type="text"
+                value={form.roomType}
+                onChange={(e) => setForm({ ...form, roomType: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="Deluxe, Standard, Suite"
+              />
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Room</label>
+              <input
+                type="text"
+                value={form.roomNumber}
+                onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="101, 202, A3"
+              />
+            </div>
+          </div>
+
+          {/* Dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Check-in</label>
@@ -255,7 +283,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {/* Actions — stacked on mobile */}
+      {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={handleSave}

@@ -1,38 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-interface Room {
-  id: string;
-  name: string;
-}
-
 export default function NewReservationPage() {
   const router = useRouter();
-  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     guestName: "",
-    roomId: "",
+    roomType: "",
+    roomNumber: "",
     checkIn: "",
     checkOut: "",
     price: "",
     notes: "",
   });
-
-  useEffect(() => {
-    fetch("/api/rooms")
-      .then((r) => r.json())
-      .then((data) => {
-        setRooms(data);
-        if (data.length > 0) setForm((f) => ({ ...f, roomId: data[0].id }));
-      })
-      .catch(() => {});
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +30,8 @@ export default function NewReservationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           guestName: form.guestName,
-          roomId: form.roomId,
+          roomType: form.roomType,
+          roomNumber: form.roomNumber,
           checkIn: form.checkIn,
           checkOut: form.checkOut,
           price: parseInt(form.price),
@@ -97,22 +83,34 @@ export default function NewReservationPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
-              Kamar *
-            </label>
-            <select
-              required
-              value={form.roomId}
-              onChange={(e) => setForm({ ...form, roomId: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none bg-white"
-            >
-              {rooms.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
+          {/* Type Kamar + Room Number — side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                Type Kamar *
+              </label>
+              <input
+                type="text"
+                required
+                value={form.roomType}
+                onChange={(e) => setForm({ ...form, roomType: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="Contoh: Deluxe, Standard, Suite"
+              />
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                Room *
+              </label>
+              <input
+                type="text"
+                required
+                value={form.roomNumber}
+                onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="Contoh: 101, 202, A3"
+              />
+            </div>
           </div>
 
           {/* Dates — stack on mobile, side-by-side on tablet+ */}

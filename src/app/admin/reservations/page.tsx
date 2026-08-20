@@ -6,13 +6,14 @@ import Link from "next/link";
 interface Reservation {
   id: string;
   guestName: string;
+  roomType: string;
+  roomNumber: string;
   price: number;
   status: string;
   checkIn: string;
   checkOut: string;
   invoiceNumber: string | null;
   createdAt: string;
-  room: { name: string };
 }
 
 function formatPrice(price: number): string {
@@ -121,7 +122,8 @@ export default function ReservationsPage() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
                 <th className="text-left px-6 py-3 font-semibold text-gray-500">Tamu</th>
-                <th className="text-left px-6 py-3 font-semibold text-gray-500">Kamar</th>
+                <th className="text-left px-6 py-3 font-semibold text-gray-500">Type Kamar</th>
+                <th className="text-left px-6 py-3 font-semibold text-gray-500">Room</th>
                 <th className="text-left px-6 py-3 font-semibold text-gray-500">Check-in</th>
                 <th className="text-left px-6 py-3 font-semibold text-gray-500">Check-out</th>
                 <th className="text-right px-6 py-3 font-semibold text-gray-500">Harga</th>
@@ -132,7 +134,7 @@ export default function ReservationsPage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
                     Tidak ada reservasi ditemukan
                   </td>
                 </tr>
@@ -147,7 +149,8 @@ export default function ReservationsPage() {
                           <p className="text-xs text-gray-400 font-mono mt-0.5">{r.invoiceNumber}</p>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-gray-600">{r.room.name}</td>
+                      <td className="px-6 py-4 text-gray-600">{r.roomType}</td>
+                      <td className="px-6 py-4 text-gray-600">{r.roomNumber}</td>
                       <td className="px-6 py-4 text-gray-600">{formatDate(r.checkIn)}</td>
                       <td className="px-6 py-4 text-gray-600">{formatDate(r.checkOut)}</td>
                       <td className="px-6 py-4 text-right font-medium text-gray-700">
@@ -214,10 +217,13 @@ export default function ReservationsPage() {
                   </span>
                 </div>
 
-                {/* Room badge */}
+                {/* Room badges */}
                 <div className="flex items-center gap-1.5 mb-2.5">
+                  <span className="text-[11px] bg-gold/10 text-gold px-2 py-0.5 rounded-md font-medium">
+                    {r.roomType}
+                  </span>
                   <span className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium">
-                    🚪 {r.room.name}
+                    🚪 {r.roomNumber}
                   </span>
                 </div>
 

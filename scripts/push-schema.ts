@@ -12,28 +12,42 @@ const client = createClient({ url, authToken });
 
 async function pushSchema() {
   console.log("Connecting to Turso...");
-  
-  // Add the new proofData column (idempotent)
+
+  // Add roomType column (idempotent)
   try {
     await client.execute({
-      sql: "ALTER TABLE Payment ADD COLUMN proofData TEXT",
+      sql: 'ALTER TABLE Reservation ADD COLUMN roomType TEXT NOT NULL DEFAULT ""',
       args: [],
     });
-    console.log("✅ Added proofData column");
+    console.log("✅ Added roomType column");
   } catch (e: any) {
     if (e.message?.includes("already exists")) {
-      console.log("ℹ️ proofData column already exists");
+      console.log("ℹ️ roomType column already exists");
     } else {
       console.error("Error:", e.message);
     }
   }
 
-  // Make proofImage nullable (SQLite doesn't support ALTER COLUMN, but the default should work)
-  console.log("✅ Schema update complete");
+  // Add roomNumber column (idempotent)
+  try {
+    await client.execute({
+      sql: 'ALTER TABLE Reservation ADD COLUMN roomNumber TEXT NOT NULL DEFAULT ""',
+      args: [],
+    });
+    console.log("✅ Added roomNumber column");
+  } catch (e: any) {
+    if (e.message?.includes("already exists")) {
+      console.log("ℹ️ roomNumber column already exists");
+    } else {
+      console.error("Error:", e.message);
+    }
+  }
+
+  console.log("\n✅ Schema update complete");
 
   // Verify
-  const result = await client.execute("PRAGMA table_info(Payment)");
-  console.log("\nPayment columns:");
+  const result = await client.execute("PRAGMA table_info(Reservation)");
+  console.log("\nReservation columns:");
   for (const row of result.rows) {
     console.log(`  ${row.name} (${row.type})`);
   }

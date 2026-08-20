@@ -12,7 +12,7 @@ export async function GET() {
       prisma.reservation.findMany({
         take: 10,
         orderBy: { createdAt: "desc" },
-        include: { room: { select: { name: true } } },
+
       }),
     ]);
 

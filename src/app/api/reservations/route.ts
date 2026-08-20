@@ -8,7 +8,6 @@ const generateId = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 25);
 export async function GET() {
   try {
     const reservations = await prisma.reservation.findMany({
-      include: { room: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(reservations);
@@ -22,15 +21,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { guestName, roomId, checkIn, checkOut, price, notes } = body;
+    const { guestName, roomType, roomNumber, checkIn, checkOut, price, notes } = body;
 
-    if (!guestName || !roomId || !checkIn || !checkOut || !price) {
+    if (!guestName || !roomType || !roomNumber || !checkIn || !checkOut || !price) {
       return NextResponse.json({ error: "Semua field wajib harus diisi" }, { status: 400 });
-    }
-
-    const room = await prisma.room.findUnique({ where: { id: roomId } });
-    if (!room) {
-      return NextResponse.json({ error: "Kamar tidak ditemukan" }, { status: 404 });
     }
 
     const checkInDate = new Date(checkIn);
@@ -43,14 +37,14 @@ export async function POST(request: NextRequest) {
       data: {
         id: generateId(),
         guestName,
-        roomId,
+        roomType,
+        roomNumber,
         checkIn: checkInDate,
         checkOut: checkOutDate,
         price: parseInt(price),
         notes: notes || null,
         status: "menunggu_pembayaran",
       },
-      include: { room: { select: { name: true } } },
     });
 
     return NextResponse.json(reservation, { status: 201 });

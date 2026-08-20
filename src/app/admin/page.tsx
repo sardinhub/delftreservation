@@ -14,13 +14,14 @@ interface Stats {
 interface Reservation {
   id: string;
   guestName: string;
+  roomType: string;
+  roomNumber: string;
   price: number;
   status: string;
   checkIn: string;
   checkOut: string;
   invoiceNumber: string | null;
   createdAt: string;
-  room: { name: string };
 }
 
 function formatPrice(price: number): string {
@@ -76,7 +77,7 @@ export default function AdminDashboard() {
         <p className="text-gray-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Ringkasan reservasi apartemen</p>
       </div>
 
-      {/* Stats Cards — 2x2 grid always, compact on mobile */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-5 sm:mb-8">
         <div className="bg-white rounded-xl p-3.5 sm:p-5 border border-gray-100">
           <p className="text-[11px] sm:text-sm text-gray-400">Total</p>
@@ -134,7 +135,7 @@ export default function AdminDashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate text-sm">{r.guestName}</p>
                     <p className="text-[11px] sm:text-sm text-gray-400 mt-0.5 truncate">
-                      {r.room.name} · {formatDate(r.checkIn)} → {formatDate(r.checkOut)}
+                      {r.roomType} · {r.roomNumber} · {formatDate(r.checkIn)} → {formatDate(r.checkOut)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 ml-3 flex-shrink-0">

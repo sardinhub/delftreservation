@@ -6,6 +6,8 @@ import Link from "next/link";
 interface InvoiceData {
   id: string;
   guestName: string;
+  roomType: string;
+  roomNumber: string;
   checkIn: string;
   checkOut: string;
   price: number;
@@ -13,7 +15,6 @@ interface InvoiceData {
   invoiceNumber: string;
   notes: string | null;
   createdAt: string;
-  room: { name: string };
 }
 
 function formatPrice(price: number): string {
@@ -111,7 +112,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
           <p className="text-gray-400 text-xs sm:text-sm">Telp: 0811-4128-05</p>
         </div>
 
-        {/* Invoice Info — stacked on mobile */}
+        {/* Invoice Info */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-3 mb-4 sm:mb-6">
           <div>
             <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Invoice</p>
@@ -127,7 +128,11 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
         <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
           <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Tamu</p>
           <p className="font-semibold text-gray-900 text-sm sm:text-base">{invoice.guestName}</p>
-          <p className="text-xs sm:text-sm text-gray-500">Kamar: {invoice.room.name}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs sm:text-sm text-gray-500">Type: {invoice.roomType}</span>
+            <span className="text-gray-300">·</span>
+            <span className="text-xs sm:text-sm text-gray-500">Room: {invoice.roomNumber}</span>
+          </div>
         </div>
 
         {/* Reservation Details */}
