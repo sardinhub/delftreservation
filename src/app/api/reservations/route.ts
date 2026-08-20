@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(reservation, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/reservations error:", error);
-    return NextResponse.json({ error: "Gagal membuat reservasi" }, { status: 500 });
+  } catch (error: any) {
+    console.error("POST /api/reservations error:", error?.message || error);
+    return NextResponse.json({ error: "Gagal membuat reservasi: " + (error?.message || "Unknown error") }, { status: 500 });
   }
 }

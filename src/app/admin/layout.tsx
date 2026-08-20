@@ -74,12 +74,13 @@ export default function AdminLayout({
               <Link href="/admin" className="flex items-center gap-2 whitespace-nowrap">
                 <Image
                   src="/logo-delft.jpg"
-                  alt="DELFT APARTMENT"
-                  width={120}
-                  height={35}
+                  alt="Delft Apartment"
+                  width={40}
+                  height={40}
                   className="h-8 sm:h-9 w-auto"
                   priority
                 />
+                <span className="font-bold text-base sm:text-lg text-navy">Delft Apartment</span>
               </Link>
               <div className="hidden sm:flex items-center gap-1">
                 {navLinks.map((link) => (
