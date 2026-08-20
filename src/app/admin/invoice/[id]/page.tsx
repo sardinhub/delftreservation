@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -65,6 +65,8 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch(`/api/reservations/${id}`)
@@ -76,8 +78,84 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
       .catch(() => setLoading(false));
   }, [id]);
 
-  const handlePrint = () => {
-    window.print();
+  const handleExportPDF = async () => {
+    if (!invoiceRef.current || !invoice) return;
+    setExporting(true);
+
+    try {
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const element = invoiceRef.current;
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+
+      // A4 size in points: 595.28 x 841.89
+      const pdfWidth = 595.28;
+      const pdfHeight = 841.89;
+      const margin = 20; // points
+
+      const contentWidth = pdfWidth - margin * 2;
+      const ratio = contentWidth / imgWidth;
+      const contentHeight = imgHeight * ratio;
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+
+      // If content fits on one page
+      if (contentHeight <= pdfHeight - margin * 2) {
+        pdf.addImage(imgData, "PNG", margin, margin, contentWidth, contentHeight);
+      } else {
+        // Multi-page: slice the image
+        const pageContentHeight = pdfHeight - margin * 2;
+        const pageContentHeightPx = pageContentHeight / ratio;
+        let yOffset = 0;
+        let page = 0;
+
+        while (yOffset < imgHeight) {
+          if (page > 0) pdf.addPage();
+
+          const sliceHeight = Math.min(pageContentHeightPx, imgHeight - yOffset);
+
+          // Create a slice canvas
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = imgWidth;
+          sliceCanvas.height = sliceHeight;
+          const ctx = sliceCanvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(canvas, 0, yOffset, imgWidth, sliceHeight, 0, 0, imgWidth, sliceHeight);
+            const sliceData = sliceCanvas.toDataURL("image/png");
+            const slicePdfHeight = sliceHeight * ratio;
+            pdf.addImage(sliceData, "PNG", margin, margin, contentWidth, slicePdfHeight);
+          }
+
+          yOffset += pageContentHeightPx;
+          page++;
+        }
+      }
+
+      // Generate filename
+      const filename = `Invoice-${invoice.invoiceNumber}.pdf`;
+      pdf.save(filename);
+    } catch (error) {
+      console.error("PDF export failed:", error);
+      alert("Gagal membuat PDF. Silakan coba lagi.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (loading) {
@@ -109,29 +187,39 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
   const remainingBalance = invoice.price - dpAmount;
 
   return (
-    <div className="bg-gray-100 print:bg-white print:min-h-0 print:h-auto" data-invoice>
-      {/* Print Button - fixed position, hidden on print */}
-      <div className="fixed bottom-6 right-6 z-50 no-print">
+    <div className="bg-gray-100">
+      {/* Action Buttons - fixed position, hidden on export */}
+      <div className="fixed bottom-6 right-6 z-50 no-print flex items-center gap-3">
         <Link
           href={`/admin/reservations/${id}`}
-          className="absolute bottom-0 right-16 flex items-center gap-2 px-4 py-3 bg-white text-gray-700 rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium active:scale-[0.98]"
+          className="flex items-center gap-2 px-4 py-3 bg-white text-gray-700 rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium active:scale-[0.98]"
         >
           ← Kembali
         </Link>
         <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-5 py-3 bg-[#1a2744] text-white rounded-full shadow-lg hover:bg-[#16213e] transition-colors text-sm font-medium active:scale-[0.98]"
+          onClick={handleExportPDF}
+          disabled={exporting}
+          className="flex items-center gap-2 px-5 py-3 bg-[#1a2744] text-white rounded-full shadow-lg hover:bg-[#16213e] transition-colors text-sm font-medium active:scale-[0.98] disabled:opacity-60"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
-          Cetak
+          {exporting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Membuat PDF...
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export PDF
+            </>
+          )}
         </button>
       </div>
 
-      {/* Invoice Document - compact for single page */}
-      <div className="max-w-[700px] mx-auto py-4 px-3 sm:px-4 print:py-0 print:px-0 print:max-w-none print:m-0" data-invoice-doc>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden print:shadow-none print:border-none print:rounded-none">
+      {/* Invoice Document */}
+      <div className="max-w-[700px] mx-auto py-4 px-3 sm:px-4">
+        <div ref={invoiceRef} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
           {/* === HEADER === */}
           <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-gray-200">
