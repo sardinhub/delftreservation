@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { cancelExpiredReservations } from "@/lib/cancel-expired";
 
 function generateInvoiceNumber(): string {
   const now = new Date();
@@ -39,6 +40,9 @@ export async function POST(
       );
     }
 
+    // First, cancel any other expired reservations for this room
+    await cancelExpiredReservations();
+
     // Approve and generate invoice number
     const invoiceNumber = generateInvoiceNumber();
 
@@ -47,6 +51,7 @@ export async function POST(
       data: {
         status: "approved",
         invoiceNumber,
+        approvedAt: new Date(),
         notes: notes || reservation.notes,
       },
       include: { room: true },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { cancelExpiredReservations } from "@/lib/cancel-expired";
 
 // GET /api/rooms/[id] - Get room details
 export async function GET(
@@ -8,6 +9,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    // Auto-cancel expired reservations first
+    await cancelExpiredReservations();
+
     const room = await prisma.room.findUnique({
       where: { id },
       include: {

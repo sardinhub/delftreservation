@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { cancelExpiredReservations } from "@/lib/cancel-expired";
 
 // Generate invoice number: INV-YYYYMMDD-XXXX
 function generateInvoiceNumber(): string {
@@ -87,6 +88,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Auto-cancel expired reservations first
+    await cancelExpiredReservations();
 
     // Check availability - no overlapping approved/confirmed reservations
     const checkInDate = new Date(checkIn);

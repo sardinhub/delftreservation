@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { cancelExpiredReservations } from "@/lib/cancel-expired";
 
 // GET /api/rooms - List all rooms
 export async function GET(request: NextRequest) {
@@ -8,6 +9,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
 
     const where = status ? { status } : {};
+
+    // Auto-cancel expired reservations before showing room availability
+    await cancelExpiredReservations();
 
     const rooms = await prisma.room.findMany({
       where,

@@ -20,6 +20,7 @@ interface Reservation {
   status: string;
   accessCode: string | null;
   invoiceNumber: string | null;
+  approvedAt: string | null;
   notes: string | null;
   createdAt: string;
   room: { id: string; name: string; floor: number; price: number };
@@ -107,6 +108,7 @@ export default function BookingStatusPage() {
   const [phone, setPhone] = useState("");
   const [lookupMode, setLookupMode] = useState(true);
   const [lookupError, setLookupError] = useState("");
+  const [timeLeft, setTimeLeft] = useState("");
 
   // Payment form
   const [paymentForm, setPaymentForm] = useState({
@@ -138,6 +140,43 @@ export default function BookingStatusPage() {
       setLoading(false);
     }
   }, [params.id]);
+
+  // Countdown timer for 3-hour payment window
+  useEffect(() => {
+    if (!reservation || !reservation.approvedAt) {
+      setTimeLeft("");
+      return;
+    }
+    if (!["approved", "invoice_issued"].includes(reservation.status)) {
+      setTimeLeft("");
+      return;
+    }
+
+    const approvedTime = new Date(reservation.approvedAt).getTime();
+    const EXPIRY_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const elapsed = now - approvedTime;
+      const remaining = EXPIRY_MS - elapsed;
+
+      if (remaining <= 0) {
+        setTimeLeft("EXPIRED");
+        // Refresh to show cancelled status
+        fetchReservation(reservation.id);
+        return;
+      }
+
+      const hours = Math.floor(remaining / (1000 * 60 * 60));
+      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+      setTimeLeft(`${hours}j ${minutes}m ${seconds}s`);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [reservation?.id, reservation?.status, reservation?.approvedAt]);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -325,6 +364,25 @@ export default function BookingStatusPage() {
             </div>
           </div>
         </div>
+
+        {/* Countdown Timer */}
+        {(reservation.status === "approved" || reservation.status === "invoice_issued") && timeLeft && (
+          <div className={`rounded-2xl p-4 mb-6 text-center border-2 ${
+            timeLeft === "EXPIRED"
+              ? "bg-red-50 border-red-200"
+              : "bg-orange-50 border-orange-200"
+          }`}>
+            <p className="text-sm font-semibold text-orange-700 mb-1">⏰ Batas Waktu Pembayaran</p>
+            {timeLeft === "EXPIRED" ? (
+              <p className="text-red-700 font-bold">Waktu habis — reservasi akan dibatalkan otomatis</p>
+            ) : (
+              <p className="text-2xl font-mono font-bold text-orange-800">{timeLeft}</p>
+            )}
+            <p className="text-xs text-orange-600 mt-1">
+              Reservasi otomatis dibatalkan jika pembayaran tidak diterima dalam 3 jam setelah disetujui
+            </p>
+          </div>
+        )}
 
         {/* Payment Form (for approved status) */}
         {(reservation.status === "approved" || reservation.status === "invoice_issued") && (
