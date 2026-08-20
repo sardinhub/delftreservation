@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/prisma";
 
 function generateInvoiceNumber(): string {
   const now = new Date();
@@ -18,11 +18,16 @@ export async function POST(
   try {
     const { id } = await params;
 
-    const reservation = await prisma.reservation.findUnique({ where: { id } });
+    const result = await db.execute({
+      sql: "SELECT * FROM Reservation WHERE id = ?",
+      args: [id],
+    });
 
-    if (!reservation) {
+    if (result.rows.length === 0) {
       return NextResponse.json({ error: "Reservasi tidak ditemukan" }, { status: 404 });
     }
+
+    const reservation = result.rows[0] as any;
 
     if (reservation.status !== "lunas") {
       return NextResponse.json(
@@ -40,9 +45,9 @@ export async function POST(
 
     const invoiceNumber = generateInvoiceNumber();
 
-    await prisma.reservation.update({
-      where: { id },
-      data: { invoiceNumber },
+    await db.execute({
+      sql: "UPDATE Reservation SET invoiceNumber = ?, updatedAt = ? WHERE id = ?",
+      args: [invoiceNumber, new Date().toISOString(), id],
     });
 
     return NextResponse.json({

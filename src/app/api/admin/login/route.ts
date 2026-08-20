@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { createSessionToken, setSessionCookie } from "@/lib/auth";
 
@@ -15,16 +15,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const admin = await prisma.admin.findUnique({
-      where: { username },
+    const result = await db.execute({
+      sql: "SELECT * FROM Admin WHERE username = ?",
+      args: [username],
     });
 
-    if (!admin) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { error: "Username atau password salah" },
         { status: 401 }
       );
     }
+
+    const admin = result.rows[0] as any;
 
     const isValid = await bcrypt.compare(password, admin.password);
 
@@ -58,9 +61,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("POST /api/admin/login error:", error);
-    return NextResponse.json(
-      { error: "Gagal login" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Gagal login" }, { status: 500 });
   }
 }

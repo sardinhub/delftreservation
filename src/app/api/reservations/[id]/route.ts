@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/prisma";
 
 // GET /api/reservations/[id]
 export async function GET(
@@ -8,15 +8,16 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const reservation = await prisma.reservation.findUnique({
-      where: { id },
+    const result = await db.execute({
+      sql: "SELECT * FROM Reservation WHERE id = ?",
+      args: [id],
     });
 
-    if (!reservation) {
+    if (result.rows.length === 0) {
       return NextResponse.json({ error: "Reservasi tidak ditemukan" }, { status: 404 });
     }
 
-    return NextResponse.json(reservation);
+    return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error("GET /api/reservations/[id] error:", error);
     return NextResponse.json({ error: "Gagal mengambil data" }, { status: 500 });
@@ -33,27 +34,50 @@ export async function PUT(
     const body = await request.json();
     const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, notes } = body;
 
-    const existing = await prisma.reservation.findUnique({ where: { id } });
-    if (!existing) {
+    // Check if reservation exists
+    const existing = await db.execute({
+      sql: "SELECT id FROM Reservation WHERE id = ?",
+      args: [id],
+    });
+
+    if (existing.rows.length === 0) {
       return NextResponse.json({ error: "Reservasi tidak ditemukan" }, { status: 404 });
     }
 
-    const updated = await prisma.reservation.update({
-      where: { id },
-      data: {
-        ...(guestName && { guestName }),
-        ...(phone !== undefined && { phone: phone || null }),
-        ...(roomType !== undefined && { roomType }),
-        ...(roomNumber !== undefined && { roomNumber }),
-        ...(checkIn && { checkIn: new Date(checkIn) }),
-        ...(checkOut && { checkOut: new Date(checkOut) }),
-        ...(price && { price: parseInt(price) }),
-        ...(status && { status }),
-        ...(notes !== undefined && { notes: notes || null }),
-      },
+    const now = new Date().toISOString();
+
+    // Build update query dynamically
+    const updates: string[] = [];
+    const args: any[] = [];
+
+    if (guestName) { updates.push("guestName = ?"); args.push(guestName); }
+    if (phone !== undefined) { updates.push("phone = ?"); args.push(phone || null); }
+    if (roomType !== undefined) { updates.push("roomType = ?"); args.push(roomType); }
+    if (roomNumber !== undefined) { updates.push("roomNumber = ?"); args.push(roomNumber); }
+    if (checkIn) { updates.push("checkIn = ?"); args.push(new Date(checkIn).toISOString()); }
+    if (checkOut) { updates.push("checkOut = ?"); args.push(new Date(checkOut).toISOString()); }
+    if (price) { updates.push("price = ?"); args.push(parseInt(price)); }
+    if (status) { updates.push("status = ?"); args.push(status); }
+    if (notes !== undefined) { updates.push("notes = ?"); args.push(notes || null); }
+    
+    updates.push("updatedAt = ?");
+    args.push(now);
+
+    if (updates.length > 0) {
+      args.push(id);
+      await db.execute({
+        sql: `UPDATE Reservation SET ${updates.join(", ")} WHERE id = ?`,
+        args,
+      });
+    }
+
+    // Fetch updated reservation
+    const result = await db.execute({
+      sql: "SELECT * FROM Reservation WHERE id = ?",
+      args: [id],
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error("PUT /api/reservations/[id] error:", error);
     return NextResponse.json({ error: "Gagal memperbarui reservasi" }, { status: 500 });
@@ -67,7 +91,10 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await prisma.reservation.delete({ where: { id } });
+    await db.execute({
+      sql: "DELETE FROM Reservation WHERE id = ?",
+      args: [id],
+    });
     return NextResponse.json({ message: "Reservasi berhasil dihapus" });
   } catch (error) {
     console.error("DELETE /api/reservations/[id] error:", error);
