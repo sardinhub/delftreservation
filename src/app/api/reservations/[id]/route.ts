@@ -31,7 +31,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { guestName, roomType, roomNumber, checkIn, checkOut, price, status, notes } = body;
+    const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, notes } = body;
 
     const existing = await prisma.reservation.findUnique({ where: { id } });
     if (!existing) {
@@ -42,6 +42,7 @@ export async function PUT(
       where: { id },
       data: {
         ...(guestName && { guestName }),
+        ...(phone !== undefined && { phone: phone || null }),
         ...(roomType !== undefined && { roomType }),
         ...(roomNumber !== undefined && { roomNumber }),
         ...(checkIn && { checkIn: new Date(checkIn) }),

@@ -19,6 +19,7 @@ model Room {
 model Reservation {
   id            String   @id @default(cuid())
   guestName     String
+  phone         String?  // Nomor HP tamu
   roomType      String   // Type kamar (input manual oleh admin)
   roomNumber    String   // Nomor kamar (input manual oleh admin)
   checkIn       DateTime

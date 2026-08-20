@@ -6,6 +6,7 @@ import Link from "next/link";
 interface InvoiceData {
   id: string;
   guestName: string;
+  phone: string | null;
   roomType: string;
   roomNumber: string;
   checkIn: string;
@@ -128,6 +129,9 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
         <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
           <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Tamu</p>
           <p className="font-semibold text-gray-900 text-sm sm:text-base">{invoice.guestName}</p>
+          {invoice.phone && (
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">HP: {invoice.phone}</p>
+          )}
           <div className="flex items-center gap-2 mt-1">
             <span className="text-xs sm:text-sm text-gray-500">Type: {invoice.roomType}</span>
             <span className="text-gray-300">·</span>

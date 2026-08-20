@@ -11,6 +11,7 @@ export default function NewReservationPage() {
 
   const [form, setForm] = useState({
     guestName: "",
+    phone: "",
     roomType: "",
     roomNumber: "",
     checkIn: "",
@@ -30,6 +31,7 @@ export default function NewReservationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           guestName: form.guestName,
+          phone: form.phone || null,
           roomType: form.roomType,
           roomNumber: form.roomNumber,
           checkIn: form.checkIn,
@@ -52,7 +54,6 @@ export default function NewReservationPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Header */}
       <div className="mb-4 sm:mb-6">
         <Link href="/admin/reservations" className="text-xs sm:text-sm text-gray-400 hover:text-gold">
           ← Kembali
@@ -69,21 +70,36 @@ export default function NewReservationPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          <div>
-            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
-              Nama Tamu *
-            </label>
-            <input
-              type="text"
-              required
-              value={form.guestName}
-              onChange={(e) => setForm({ ...form, guestName: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
-              placeholder="Nama lengkap tamu"
-            />
+          {/* Nama Tamu + Nomor HP */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                Nama Tamu *
+              </label>
+              <input
+                type="text"
+                required
+                value={form.guestName}
+                onChange={(e) => setForm({ ...form, guestName: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="Nama lengkap tamu"
+              />
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                Nomor HP
+              </label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="0812xxxxxxx"
+              />
+            </div>
           </div>
 
-          {/* Type Kamar + Room Number — side by side */}
+          {/* Type Kamar + Room */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
@@ -95,7 +111,7 @@ export default function NewReservationPage() {
                 value={form.roomType}
                 onChange={(e) => setForm({ ...form, roomType: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
-                placeholder="Contoh: Deluxe, Standard, Suite"
+                placeholder="Deluxe, Standard, Suite"
               />
             </div>
             <div>
@@ -108,12 +124,12 @@ export default function NewReservationPage() {
                 value={form.roomNumber}
                 onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
-                placeholder="Contoh: 101, 202, A3"
+                placeholder="101, 202, A3"
               />
             </div>
           </div>
 
-          {/* Dates — stack on mobile, side-by-side on tablet+ */}
+          {/* Dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">

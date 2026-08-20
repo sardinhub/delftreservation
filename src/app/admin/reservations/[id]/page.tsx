@@ -51,6 +51,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
 
   const [form, setForm] = useState({
     guestName: "",
+    phone: "",
     roomType: "",
     roomNumber: "",
     checkIn: "",
@@ -67,6 +68,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         setReservation(data);
         setForm({
           guestName: data.guestName,
+          phone: data.phone || "",
           roomType: data.roomType || "",
           roomNumber: data.roomNumber || "",
           checkIn: data.checkIn.split("T")[0],
@@ -93,6 +95,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           guestName: form.guestName,
+          phone: form.phone || null,
           roomType: form.roomType,
           roomNumber: form.roomNumber,
           checkIn: form.checkIn,
@@ -191,14 +194,27 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
       <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6">
         <h2 className="font-bold text-gray-900 mb-4 text-sm sm:text-base">Data Reservasi</h2>
         <div className="space-y-4">
-          <div>
-            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Nama Tamu</label>
-            <input
-              type="text"
-              value={form.guestName}
-              onChange={(e) => setForm({ ...form, guestName: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
-            />
+          {/* Nama Tamu + Nomor HP */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Nama Tamu</label>
+              <input
+                type="text"
+                value={form.guestName}
+                onChange={(e) => setForm({ ...form, guestName: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Nomor HP</label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="0812xxxxxxx"
+              />
+            </div>
           </div>
 
           {/* Type Kamar + Room Number */}

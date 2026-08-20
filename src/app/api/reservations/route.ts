@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { guestName, roomType, roomNumber, checkIn, checkOut, price, notes } = body;
+    const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, notes } = body;
 
     if (!guestName || !roomType || !roomNumber || !checkIn || !checkOut || !price) {
       return NextResponse.json({ error: "Semua field wajib harus diisi" }, { status: 400 });
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
       data: {
         id: generateId(),
         guestName,
+        phone: phone || null,
         roomType,
         roomNumber,
         checkIn: checkInDate,
