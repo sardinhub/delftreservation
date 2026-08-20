@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // NOTE: Do NOT use output: "standalone" on Vercel — it has its own serverless format
   serverExternalPackages: [
     "@prisma/client",
     "@prisma/adapter-libsql",
