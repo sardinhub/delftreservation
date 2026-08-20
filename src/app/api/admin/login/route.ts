@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admin = result.rows[0] as any;
 
     const isValid = await bcrypt.compare(password, admin.password);

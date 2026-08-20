@@ -35,12 +35,13 @@ export async function PUT(
     const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, notes } = body;
 
     // Check if reservation exists
-    const existing = await db.execute({
+    // Check if reservation exists
+    const existingResult = await db.execute({
       sql: "SELECT id FROM Reservation WHERE id = ?",
       args: [id],
     });
 
-    if (existing.rows.length === 0) {
+    if (existingResult.rows.length === 0) {
       return NextResponse.json({ error: "Reservasi tidak ditemukan" }, { status: 404 });
     }
 
@@ -48,6 +49,7 @@ export async function PUT(
 
     // Build update query dynamically
     const updates: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const args: any[] = [];
 
     if (guestName) { updates.push("guestName = ?"); args.push(guestName); }

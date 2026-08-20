@@ -18,23 +18,6 @@ interface Reservation {
   createdAt: string;
 }
 
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(price);
-}
-
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 const statusConfig: Record<string, { label: string; color: string }> = {
   lunas: { label: "Lunas", color: "bg-green-100 text-green-700" },
   dp: { label: "DP", color: "bg-yellow-100 text-yellow-700" },
@@ -84,6 +67,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
 
   useEffect(() => {
     fetchReservation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleSave = async () => {

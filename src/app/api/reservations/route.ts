@@ -10,8 +10,8 @@ export async function GET() {
     const result = await db.execute(
       "SELECT * FROM Reservation ORDER BY createdAt DESC"
     );
-    return NextResponse.json(result.rows);
-  } catch (error: any) {
+    return NextResponse.json(result.rows); // eslint-disable-line @typescript-eslint/no-explicit-any
+  } catch (error: unknown) {
     console.error("GET /api/reservations error:", error);
     return NextResponse.json({ error: "Gagal mengambil data" }, { status: 500 });
   }
@@ -62,11 +62,12 @@ export async function POST(request: NextRequest) {
       args: [id],
     });
 
-    return NextResponse.json(result.rows[0], { status: 201 });
-  } catch (error: any) {
+    return NextResponse.json(result.rows[0], { status: 201 }); // eslint-disable-line @typescript-eslint/no-explicit-any
+  } catch (error: unknown) {
     console.error("POST /api/reservations error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ 
-      error: "Gagal membuat reservasi: " + (error?.message || "Unknown error")
+      error: "Gagal membuat reservasi: " + message
     }, { status: 500 });
   }
 }

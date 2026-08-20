@@ -27,6 +27,7 @@ export async function POST(
       return NextResponse.json({ error: "Reservasi tidak ditemukan" }, { status: 404 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reservation = result.rows[0] as any;
 
     if (reservation.status !== "lunas") {
