@@ -178,7 +178,8 @@ a[role="button"],
     print-color-adjust: exact;
   }
   @page {
-    margin: 0.5cm;
+    margin: 0.4cm;
+    size: A4;
   }
   .print\:block {
     display: block !important;
@@ -194,5 +195,17 @@ a[role="button"],
   }
   .print\:p-0 {
     padding: 0 !important;
+  }
+  .print\:max-w-none {
+    max-width: 100% !important;
+  }
+  /* Force single page */
+  * {
+    page-break-inside: avoid;
+  }
+  /* Shrink spacing for print */
+  .bg-white {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
 }
