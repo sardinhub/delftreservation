@@ -176,6 +176,7 @@ a[role="button"],
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
+    height: auto !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -183,47 +184,49 @@ a[role="button"],
     margin: 0.3cm;
     size: A4;
   }
-  .print\:block {
-    display: block !important;
-  }
-  .print\:opacity-30 {
-    opacity: 0.3 !important;
-  }
-  .print\:shadow-none {
-    box-shadow: none !important;
-  }
-  .print\:border-none {
-    border: none !important;
-  }
-  .print\:p-0 {
-    padding: 0 !important;
-  }
-  .print\:max-w-none {
-    max-width: 100% !important;
-  }
-  .print\:bg-white {
-    background: white !important;
-  }
-  .print\:min-h-0 {
+  /* Kill all min-height, min-width to prevent extra pages */
+  *, *::before, *::after {
     min-height: 0 !important;
-  }
-  .print\:m-0 {
-    margin: 0 !important;
-  }
-  /* Prevent any page breaks */
-  * {
+    min-width: 0 !important;
+    height: auto !important;
     page-break-inside: avoid !important;
     page-break-after: avoid !important;
     page-break-before: avoid !important;
   }
-  /* Remove all extra spacing */
-  main {
+  /* Force all backgrounds to white */
+  .bg-gray-50, .bg-gray-100, .bg-gray-200 {
+    background-color: white !important;
+  }
+  /* Remove all padding/margin from layout wrappers */
+  main, nav, header, footer {
     padding: 0 !important;
     margin: 0 !important;
     max-width: 100% !important;
   }
-  /* Hide everything except invoice */
-  body > *:not(:has(.print\:block)):not(:has([class*="invoice"])) {
-    /* Don't hide invoice container */
+  /* Specific: root wrapper div with min-h-screen */
+  div[class*="min-h-screen"] {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  /* Invoice wrapper - no extra height */
+  [data-invoice] {
+    min-height: 0 !important;
+    height: auto !important;
+    background: transparent !important;
+  }
+  /* Invoice doc container - fill page width */
+  [data-invoice-doc] {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+  /* Fixed buttons - hide */
+  div[class*="fixed"] {
+    display: none !important;
+  }
+  /* Remove bg-gray-100 from invoice wrapper */
+  .bg-gray-100 {
+    background-color: transparent !important;
   }
 }
