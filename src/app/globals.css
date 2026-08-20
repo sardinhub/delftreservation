@@ -26,15 +26,34 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ===== BASE RESETS ===== */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
-/* Custom scrollbar */
+/* ===== MOBILE SAFE AREAS ===== */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ===== CUSTOM SCROLLBAR ===== */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 ::-webkit-scrollbar-track {
   background: var(--warm-gray);
@@ -43,8 +62,57 @@ body {
   background: var(--gold);
   border-radius: 3px;
 }
+@media (min-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+}
 
-/* Gradient text utility */
+/* ===== TOUCH-FRIENDLY FORMS ===== */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="password"],
+input[type="email"],
+select,
+textarea {
+  min-height: 44px;
+}
+
+@media (min-width: 640px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="password"],
+  input[type="email"],
+  select,
+  textarea {
+    min-height: auto;
+  }
+}
+
+/* ===== BUTTONS — MINIMUM 44px TOUCH TARGET ===== */
+button,
+a[role="button"],
+[role="button"] {
+  min-height: 44px;
+}
+
+@media (min-width: 640px) {
+  button,
+  a[role="button"],
+  [role="button"] {
+    min-height: auto;
+  }
+}
+
+/* ===== FOCUS RING FOR ACCESSIBILITY ===== */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ===== GRADIENT TEXT UTILITY ===== */
 .text-gradient-gold {
   background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
   -webkit-background-clip: text;
@@ -52,7 +120,7 @@ body {
   background-clip: text;
 }
 
-/* Card hover effect */
+/* ===== CARD HOVER EFFECT ===== */
 .card-luxury {
   transition: all 0.3s ease;
   border: 1px solid rgba(184, 134, 11, 0.15);
@@ -63,12 +131,48 @@ body {
   border-color: rgba(184, 134, 11, 0.3);
 }
 
-/* Print styles */
+/* ===== ACTIVE PRESS EFFECT (MOBILE) ===== */
+@media (hover: none) and (pointer: coarse) {
+  .active\:scale-\[0\.98\]:active {
+    transform: scale(0.98);
+  }
+}
+
+/* ===== PREVENT OVERSCROLL BOUNCE ON iOS ===== */
+@supports (-webkit-touch-callout: none) {
+  body {
+    position: fixed;
+    width: 100%;
+    min-height: 100%;
+  }
+  #root,
+  #__next {
+    min-height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ===== RESPONSIVE TABLE HELPERS ===== */
+@media (max-width: 767px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
 @media print {
   .no-print {
     display: none !important;
   }
   body {
     background: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page {
+    margin: 0.5cm;
   }
 }

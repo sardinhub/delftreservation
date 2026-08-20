@@ -66,24 +66,25 @@ export default function NewReservationPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <Link href="/admin/reservations" className="text-sm text-gray-400 hover:text-gold">
+      {/* Header */}
+      <div className="mb-4 sm:mb-6">
+        <Link href="/admin/reservations" className="text-xs sm:text-sm text-gray-400 hover:text-gold">
           ← Kembali
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Reservasi Baru</h1>
-        <p className="text-gray-500 text-sm mt-1">Input data reservasi tamu secara manual</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">Reservasi Baru</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Input data reservasi tamu secara manual</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
+      <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 sm:mb-6 text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
               Nama Tamu *
             </label>
             <input
@@ -97,7 +98,7 @@ export default function NewReservationPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
               Kamar *
             </label>
             <select
@@ -114,9 +115,10 @@ export default function NewReservationPage() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Dates — stack on mobile, side-by-side on tablet+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
                 Tanggal Check-in *
               </label>
               <input
@@ -128,7 +130,7 @@ export default function NewReservationPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
                 Tanggal Check-out *
               </label>
               <input
@@ -143,7 +145,7 @@ export default function NewReservationPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
               Harga (Rp) *
             </label>
             <input
@@ -154,11 +156,11 @@ export default function NewReservationPage() {
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
               placeholder="Contoh: 500000"
             />
-            <p className="text-xs text-gray-400 mt-1">Input harga secara manual (total untuk seluruh masa inap)</p>
+            <p className="text-[11px] sm:text-xs text-gray-400 mt-1">Input harga secara manual (total untuk seluruh masa inap)</p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
               Catatan
             </label>
             <textarea
@@ -173,7 +175,7 @@ export default function NewReservationPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-gold text-white font-semibold rounded-xl hover:bg-gold-dark transition-all disabled:opacity-50"
+            className="w-full py-3.5 bg-gold text-white font-semibold rounded-xl hover:bg-gold-dark transition-all disabled:opacity-50 text-sm active:scale-[0.98]"
           >
             {loading ? "Menyimpan..." : "Simpan Reservasi"}
           </button>

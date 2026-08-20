@@ -156,22 +156,24 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/admin/reservations" className="text-gray-400 hover:text-gold">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+        <Link href="/admin/reservations" className="text-gray-400 hover:text-gold text-lg sm:text-xl flex-shrink-0">
           ←
         </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">Detail Reservasi</h1>
-          <p className="text-sm text-gray-400 font-mono">{reservation.id}</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">Detail Reservasi</h1>
+          <p className="text-[11px] sm:text-sm text-gray-400 font-mono truncate">{reservation.id}</p>
         </div>
-        <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${st.color}`}>
+        <span className={`flex-shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold ${st.color}`}>
           {st.label}
         </span>
       </div>
 
+      {/* Message */}
       {message.text && (
         <div
-          className={`px-4 py-3 rounded-xl mb-6 text-sm ${
+          className={`px-4 py-3 rounded-xl mb-4 sm:mb-6 text-sm ${
             message.type === "success"
               ? "bg-green-50 border border-green-200 text-green-700"
               : "bg-red-50 border border-red-200 text-red-700"
@@ -181,11 +183,12 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-900 mb-4">Data Reservasi</h2>
+      {/* Form Card */}
+      <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 className="font-bold text-gray-900 mb-4 text-sm sm:text-base">Data Reservasi</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Tamu</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Nama Tamu</label>
             <input
               type="text"
               value={form.guestName}
@@ -194,9 +197,10 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Dates — stack on mobile, side-by-side on desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Check-in</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Check-in</label>
               <input
                 type="date"
                 value={form.checkIn}
@@ -205,7 +209,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Check-out</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Check-out</label>
               <input
                 type="date"
                 value={form.checkOut}
@@ -215,9 +219,9 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Harga (Rp)</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Harga (Rp)</label>
               <input
                 type="number"
                 value={form.price}
@@ -226,7 +230,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Status</label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
@@ -240,7 +244,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Catatan</label>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Catatan</label>
             <textarea
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -251,12 +255,12 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-3">
+      {/* Actions — stacked on mobile */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-3 bg-gold text-white font-semibold rounded-xl hover:bg-gold-dark transition-all disabled:opacity-50"
+          className="w-full sm:w-auto px-6 py-3.5 bg-gold text-white font-semibold rounded-xl hover:bg-gold-dark transition-all disabled:opacity-50 text-sm active:scale-[0.98]"
         >
           {saving ? "Menyimpan..." : "💾 Simpan Perubahan"}
         </button>
@@ -264,7 +268,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         {form.status === "lunas" && !reservation.invoiceNumber && (
           <button
             onClick={generateInvoice}
-            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all"
+            className="w-full sm:w-auto px-6 py-3.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all text-sm active:scale-[0.98]"
           >
             🧾 Buat Invoice
           </button>
@@ -273,7 +277,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         {reservation.invoiceNumber && (
           <Link
             href={`/admin/invoice/${reservation.id}`}
-            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all text-center"
+            className="w-full sm:w-auto px-6 py-3.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all text-center text-sm active:scale-[0.98]"
           >
             🧾 Lihat Invoice
           </Link>
@@ -281,7 +285,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
 
         <button
           onClick={handleDelete}
-          className="px-6 py-3 bg-red-50 text-red-600 font-semibold rounded-xl border border-red-200 hover:bg-red-100 transition-all ml-auto"
+          className="w-full sm:w-auto px-6 py-3.5 bg-red-50 text-red-600 font-semibold rounded-xl border border-red-200 hover:bg-red-100 transition-all text-sm sm:ml-auto active:scale-[0.98]"
         >
           🗑️ Hapus
         </button>

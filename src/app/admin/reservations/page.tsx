@@ -31,10 +31,10 @@ function formatDate(date: string): string {
   });
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  lunas: { label: "Lunas", color: "bg-green-100 text-green-700" },
-  dp: { label: "DP", color: "bg-yellow-100 text-yellow-700" },
-  menunggu_pembayaran: { label: "Menunggu", color: "bg-gray-100 text-gray-600" },
+const statusConfig: Record<string, { label: string; color: string; dot: string }> = {
+  lunas: { label: "Lunas", color: "bg-green-100 text-green-700", dot: "bg-green-500" },
+  dp: { label: "DP", color: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-500" },
+  menunggu_pembayaran: { label: "Menunggu", color: "bg-gray-100 text-gray-600", dot: "bg-gray-400" },
 };
 
 export default function ReservationsPage() {
@@ -69,29 +69,30 @@ export default function ReservationsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reservasi</h1>
-          <p className="text-gray-500 text-sm mt-1">{reservations.length} total reservasi</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Reservasi</h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-0.5 sm:mt-1">{reservations.length} total reservasi</p>
         </div>
         <Link
           href="/admin/reservations/new"
-          className="px-4 py-2 bg-gold text-white font-semibold rounded-xl hover:bg-gold-dark transition-colors text-sm"
+          className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gold text-white font-semibold rounded-xl hover:bg-gold-dark transition-colors text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
         >
-          + Tambah Baru
+          + Baru
         </Link>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="mb-4 sm:mb-6 space-y-3">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Cari nama tamu..."
-          className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+          placeholder="🔍 Cari nama tamu..."
+          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
         />
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
           {[
             { value: "all", label: "Semua" },
             { value: "lunas", label: "Lunas" },
@@ -101,7 +102,7 @@ export default function ReservationsPage() {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 filter === f.value
                   ? "bg-gold text-white"
                   : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -113,8 +114,8 @@ export default function ReservationsPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      {/* Desktop: Table View */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -182,6 +183,65 @@ export default function ReservationsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile: Card View */}
+      <div className="md:hidden space-y-3">
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 px-6 py-12 text-center text-gray-400">
+            <p className="text-3xl mb-2">📋</p>
+            <p>Tidak ada reservasi ditemukan</p>
+          </div>
+        ) : (
+          filtered.map((r) => {
+            const st = statusConfig[r.status] || statusConfig.menunggu_pembayaran;
+            return (
+              <Link
+                key={r.id}
+                href={`/admin/reservations/${r.id}`}
+                className="block bg-white rounded-xl border border-gray-100 p-4 hover:border-gold/30 transition-colors active:scale-[0.98]"
+              >
+                {/* Top row: name + status */}
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{r.guestName}</p>
+                    {r.invoiceNumber && (
+                      <p className="text-[11px] text-gray-400 font-mono">{r.invoiceNumber}</p>
+                    )}
+                  </div>
+                  <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold ${st.color}`}>
+                    {st.label}
+                  </span>
+                </div>
+
+                {/* Room badge */}
+                <div className="flex items-center gap-1.5 mb-2.5">
+                  <span className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium">
+                    🚪 {r.room.name}
+                  </span>
+                </div>
+
+                {/* Dates */}
+                <div className="flex items-center text-xs text-gray-500 gap-1 mb-2.5">
+                  <span>{formatDate(r.checkIn)}</span>
+                  <span className="text-gray-300">→</span>
+                  <span>{formatDate(r.checkOut)}</span>
+                </div>
+
+                {/* Bottom row: price + actions */}
+                <div className="flex items-center justify-between pt-2.5 border-t border-gray-100">
+                  <span className="font-bold text-sm text-gray-900">{formatPrice(r.price)}</span>
+                  <div className="flex items-center gap-3">
+                    {r.status === "lunas" && r.invoiceNumber && (
+                      <span className="text-xs text-blue-500 font-medium">🧾 Invoice</span>
+                    )}
+                    <span className="text-xs text-gold font-medium">Detail →</span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })
+        )}
       </div>
     </div>
   );
