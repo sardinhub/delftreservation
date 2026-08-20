@@ -2,6 +2,9 @@
   "name": "delft-reservation",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "db:push": "npx prisma db push",
