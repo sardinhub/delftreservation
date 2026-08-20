@@ -32,7 +32,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, notes } = body;
+    const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, dpAmount, notes } = body;
 
     // Check if reservation exists
     // Check if reservation exists
@@ -60,6 +60,7 @@ export async function PUT(
     if (checkOut) { updates.push("checkOut = ?"); args.push(new Date(checkOut).toISOString()); }
     if (price) { updates.push("price = ?"); args.push(parseInt(price)); }
     if (status) { updates.push("status = ?"); args.push(status); }
+    if (dpAmount !== undefined) { updates.push("dpAmount = ?"); args.push(parseInt(dpAmount) || 0); }
     if (notes !== undefined) { updates.push("notes = ?"); args.push(notes || null); }
     
     updates.push("updatedAt = ?");

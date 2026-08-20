@@ -15,6 +15,7 @@ model Reservation {
   checkIn       DateTime
   checkOut      DateTime
   price         Int      // Harga kamar (input manual oleh admin)
+  dpAmount      Int      @default(0) // Nominal DP jika status = dp
   status        String   @default("menunggu_pembayaran") // menunggu_pembayaran, dp, lunas
   invoiceNumber String?
   notes         String?

@@ -13,6 +13,7 @@ interface InvoiceData {
   checkOut: string;
   price: number;
   status: string;
+  dpAmount: number;
   invoiceNumber: string;
   notes: string | null;
   createdAt: string;
@@ -38,6 +39,12 @@ function calculateNights(checkIn: string, checkOut: string): number {
   const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
+
+const watermarkConfig: Record<string, { text: string; color: string }> = {
+  menunggu_pembayaran: { text: "RESERVASI", color: "text-blue-200" },
+  dp: { text: "DOWN PAYMENT", color: "text-yellow-300" },
+  lunas: { text: "LUNAS", color: "text-green-200" },
+};
 
 export default function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -85,6 +92,17 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
     year: "numeric",
   });
 
+  const watermark = watermarkConfig[invoice.status] || watermarkConfig.menunggu_pembayaran;
+  const isDP = invoice.status === "dp";
+  const dpAmount = invoice.dpAmount || 0;
+  const remainingBalance = invoice.price - dpAmount;
+
+  const statusLabel: Record<string, string> = {
+    menunggu_pembayaran: "Menunggu Pembayaran",
+    dp: "DP (Down Payment)",
+    lunas: "Lunas",
+  };
+
   return (
     <div>
       {/* Actions (hidden when printing) */}
@@ -105,88 +123,137 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
       </div>
 
       {/* Invoice Card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-8 max-w-2xl mx-auto print:shadow-none print:border-none print:p-0">
-        {/* Header */}
-        <div className="text-center border-b border-gray-200 pb-4 sm:pb-6 mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#1a2744]">🏢 DELFT APARTMENT</h2>
-          <p className="text-gray-400 text-xs sm:text-sm mt-1">Kawasan CPI Makassar</p>
-          <p className="text-gray-400 text-xs sm:text-sm">Telp: 0811-4128-05</p>
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-8 max-w-2xl mx-auto print:shadow-none print:border-none print:p-0 relative overflow-hidden">
+        {/* WATERMARK */}
+        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 print:block`}>
+          <span
+            className={`${watermark.color} text-5xl sm:text-7xl md:text-8xl font-black uppercase tracking-widest -rotate-30 opacity-40 print:opacity-30`}
+          >
+            {watermark.text}
+          </span>
         </div>
 
-        {/* Invoice Info */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-3 mb-4 sm:mb-6">
-          <div>
-            <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Invoice</p>
-            <p className="font-mono font-bold text-base sm:text-lg text-gray-900">{invoice.invoiceNumber}</p>
+        {/* Content (above watermark) */}
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="text-center border-b border-gray-200 pb-4 sm:pb-6 mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#1a2744]">🏢 DELFT APARTMENT</h2>
+            <p className="text-gray-400 text-xs sm:text-sm mt-1">Kawasan CPI Makassar</p>
+            <p className="text-gray-400 text-xs sm:text-sm">Telp: 0811-4128-05</p>
           </div>
-          <div className="sm:text-right">
-            <p className="text-[10px] sm:text-xs text-gray-400">Tanggal</p>
-            <p className="text-xs sm:text-sm text-gray-700">{today}</p>
-          </div>
-        </div>
 
-        {/* Guest Info */}
-        <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
-          <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Tamu</p>
-          <p className="font-semibold text-gray-900 text-sm sm:text-base">{invoice.guestName}</p>
-          {invoice.phone && (
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">HP: {invoice.phone}</p>
+          {/* Invoice Info */}
+          <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-3 mb-4 sm:mb-6">
+            <div>
+              <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Invoice</p>
+              <p className="font-mono font-bold text-base sm:text-lg text-gray-900">{invoice.invoiceNumber}</p>
+            </div>
+            <div className="sm:text-right">
+              <p className="text-[10px] sm:text-xs text-gray-400">Tanggal</p>
+              <p className="text-xs sm:text-sm text-gray-700">{today}</p>
+            </div>
+          </div>
+
+          {/* Guest Info */}
+          <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+            <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Tamu</p>
+            <p className="font-semibold text-gray-900 text-sm sm:text-base">{invoice.guestName}</p>
+            {invoice.phone && (
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">HP: {invoice.phone}</p>
+            )}
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs sm:text-sm text-gray-500">Type: {invoice.roomType}</span>
+              <span className="text-gray-300">·</span>
+              <span className="text-xs sm:text-sm text-gray-500">Room: {invoice.roomNumber}</span>
+            </div>
+          </div>
+
+          {/* Reservation Details */}
+          <table className="w-full text-xs sm:text-sm mb-4 sm:mb-6">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-2 text-gray-500 font-semibold">Deskripsi</th>
+                <th className="text-right py-2 text-gray-500 font-semibold">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-gray-100">
+                <td className="py-2.5 sm:py-3 text-gray-700">Check-in</td>
+                <td className="py-2.5 sm:py-3 text-right text-gray-900">{formatDate(invoice.checkIn)}</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="py-2.5 sm:py-3 text-gray-700">Check-out</td>
+                <td className="py-2.5 sm:py-3 text-right text-gray-900">{formatDate(invoice.checkOut)}</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="py-2.5 sm:py-3 text-gray-700">Durasi</td>
+                <td className="py-2.5 sm:py-3 text-right text-gray-900">{nights} malam</td>
+              </tr>
+              {isDP && (
+                <>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2.5 sm:py-3 text-gray-700 font-semibold">Total Harga</td>
+                    <td className="py-2.5 sm:py-3 text-right text-gray-900 font-semibold">{formatPrice(invoice.price)}</td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2.5 sm:py-3 text-yellow-700">Down Payment (DP)</td>
+                    <td className="py-2.5 sm:py-3 text-right text-yellow-700 font-semibold">-{formatPrice(dpAmount)}</td>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
+
+          {/* Total / Payment Info */}
+          {isDP ? (
+            <div className="space-y-3">
+              {/* DP Paid */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 sm:p-5">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-sm sm:text-base text-yellow-800">💰 DP Dibayar</span>
+                  <span className="text-lg sm:text-xl font-bold text-yellow-700">{formatPrice(dpAmount)}</span>
+                </div>
+              </div>
+              {/* Remaining Balance */}
+              <div className="bg-[#1a2744] rounded-xl p-4 sm:p-5 text-white">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-sm sm:text-base">Sisa Pembayaran</span>
+                  <span className="text-lg sm:text-2xl font-bold">{formatPrice(remainingBalance)}</span>
+                </div>
+                <div className="flex justify-between items-center mt-2 text-white/60 text-xs sm:text-sm">
+                  <span>Status</span>
+                  <span className="font-semibold text-yellow-300">⏳ {statusLabel[invoice.status]?.toUpperCase()}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-[#1a2744] rounded-xl p-4 sm:p-5 text-white">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-sm sm:text-base">Total Pembayaran</span>
+                <span className="text-lg sm:text-2xl font-bold">{formatPrice(invoice.price)}</span>
+              </div>
+              <div className="flex justify-between items-center mt-2 text-white/60 text-xs sm:text-sm">
+                <span>Status</span>
+                <span className={`font-semibold ${invoice.status === "lunas" ? "text-green-300" : "text-blue-300"}`}>
+                  {invoice.status === "lunas" ? "✅ LUNAS" : "⏳ MENUNGGU PEMBAYARAN"}
+                </span>
+              </div>
+            </div>
           )}
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs sm:text-sm text-gray-500">Type: {invoice.roomType}</span>
-            <span className="text-gray-300">·</span>
-            <span className="text-xs sm:text-sm text-gray-500">Room: {invoice.roomNumber}</span>
-          </div>
-        </div>
 
-        {/* Reservation Details */}
-        <table className="w-full text-xs sm:text-sm mb-4 sm:mb-6">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-2 text-gray-500 font-semibold">Deskripsi</th>
-              <th className="text-right py-2 text-gray-500 font-semibold">Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-gray-100">
-              <td className="py-2.5 sm:py-3 text-gray-700">Check-in</td>
-              <td className="py-2.5 sm:py-3 text-right text-gray-900">{formatDate(invoice.checkIn)}</td>
-            </tr>
-            <tr className="border-b border-gray-100">
-              <td className="py-2.5 sm:py-3 text-gray-700">Check-out</td>
-              <td className="py-2.5 sm:py-3 text-right text-gray-900">{formatDate(invoice.checkOut)}</td>
-            </tr>
-            <tr className="border-b border-gray-100">
-              <td className="py-2.5 sm:py-3 text-gray-700">Durasi</td>
-              <td className="py-2.5 sm:py-3 text-right text-gray-900">{nights} malam</td>
-            </tr>
-          </tbody>
-        </table>
+          {/* Notes */}
+          {invoice.notes && (
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+              <p className="text-[10px] sm:text-xs text-yellow-600 uppercase tracking-wider mb-1">Catatan</p>
+              <p className="text-xs sm:text-sm text-yellow-800">{invoice.notes}</p>
+            </div>
+          )}
 
-        {/* Total */}
-        <div className="bg-[#1a2744] rounded-xl p-4 sm:p-5 text-white">
-          <div className="flex justify-between items-center">
-            <span className="font-semibold text-sm sm:text-base">Total Pembayaran</span>
-            <span className="text-lg sm:text-2xl font-bold">{formatPrice(invoice.price)}</span>
+          {/* Footer */}
+          <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 text-center text-[10px] sm:text-xs text-gray-400">
+            <p>Invoice ini dicetak secara otomatis oleh sistem DELFT APARTMENT.</p>
+            <p className="mt-1">Terima kasih atas kunjungan Anda! 🙏</p>
           </div>
-          <div className="flex justify-between items-center mt-2 text-white/60 text-xs sm:text-sm">
-            <span>Status</span>
-            <span className="font-semibold text-green-300">✅ LUNAS</span>
-          </div>
-        </div>
-
-        {/* Notes */}
-        {invoice.notes && (
-          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-            <p className="text-[10px] sm:text-xs text-yellow-600 uppercase tracking-wider mb-1">Catatan</p>
-            <p className="text-xs sm:text-sm text-yellow-800">{invoice.notes}</p>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 text-center text-[10px] sm:text-xs text-gray-400">
-          <p>Invoice ini dicetak secara otomatis oleh sistem DELFT APARTMENT.</p>
-          <p className="mt-1">Terima kasih atas kunjungan Anda! 🙏</p>
         </div>
       </div>
     </div>

@@ -21,11 +21,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, notes } = body;
+    const { guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, dpAmount, notes } = body;
 
     if (!guestName || !roomType || !roomNumber || !checkIn || !checkOut || !price) {
       return NextResponse.json({ error: "Semua field wajib harus diisi" }, { status: 400 });
     }
+
+    const reservationStatus = status || "menunggu_pembayaran";
+    const reservationDpAmount = reservationStatus === "dp" ? (parseInt(dpAmount) || 0) : 0;
 
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
@@ -37,8 +40,8 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     await db.execute({
-      sql: `INSERT INTO Reservation (id, guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, invoiceNumber, notes, createdAt, updatedAt) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO Reservation (id, guestName, phone, roomType, roomNumber, checkIn, checkOut, price, status, dpAmount, invoiceNumber, notes, createdAt, updatedAt) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id,
         guestName,
@@ -48,7 +51,8 @@ export async function POST(request: NextRequest) {
         checkInDate.toISOString(),
         checkOutDate.toISOString(),
         parseInt(price),
-        "menunggu_pembayaran",
+        reservationStatus,
+        reservationDpAmount,
         null,
         notes || null,
         now,

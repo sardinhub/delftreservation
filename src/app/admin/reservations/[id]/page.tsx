@@ -7,12 +7,14 @@ import Link from "next/link";
 interface Reservation {
   id: string;
   guestName: string;
+  phone: string | null;
   roomType: string;
   roomNumber: string;
   checkIn: string;
   checkOut: string;
   price: number;
   status: string;
+  dpAmount: number;
   invoiceNumber: string | null;
   notes: string | null;
   createdAt: string;
@@ -41,6 +43,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
     checkOut: "",
     price: "",
     status: "",
+    dpAmount: "",
     notes: "",
   });
 
@@ -58,6 +61,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
           checkOut: data.checkOut.split("T")[0],
           price: String(data.price),
           status: data.status,
+          dpAmount: String(data.dpAmount || 0),
           notes: data.notes || "",
         });
         setLoading(false);
@@ -76,8 +80,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
     try {
       const res = await fetch(`/api/reservations/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        headers: { "Content-Type": "application/json" },          body: JSON.stringify({
           guestName: form.guestName,
           phone: form.phone || null,
           roomType: form.roomType,
@@ -86,6 +89,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
           checkOut: form.checkOut,
           price: parseInt(form.price),
           status: form.status,
+          dpAmount: form.status === "dp" ? parseInt(form.dpAmount) || 0 : 0,
           notes: form.notes || null,
         }),
       });
@@ -261,15 +265,41 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Status</label>
               <select
                 value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                onChange={(e) => setForm({ ...form, status: e.target.value, dpAmount: e.target.value !== "dp" ? "" : form.dpAmount })}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none bg-white"
               >
                 <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
-                <option value="dp">DP</option>
+                <option value="dp">DP (Down Payment)</option>
                 <option value="lunas">Lunas</option>
               </select>
             </div>
           </div>
+
+          {/* DP Amount - only show when status=dp */}
+          {form.status === "dp" && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-yellow-700 mb-1.5">Nominal DP (Rp)</label>
+                  <input
+                    type="number"
+                    value={form.dpAmount}
+                    onChange={(e) => setForm({ ...form, dpAmount: e.target.value })}
+                    className="w-full px-4 py-3 border border-yellow-300 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                    placeholder="Contoh: 250000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-yellow-700 mb-1.5">Sisa Pembayaran</label>
+                  <div className="w-full px-4 py-3 border border-yellow-200 rounded-xl text-sm bg-yellow-100/50 text-yellow-800 font-semibold">
+                    {form.price && form.dpAmount
+                      ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(parseInt(form.price) - parseInt(form.dpAmount))
+                      : "-"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Catatan</label>
@@ -293,7 +323,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
           {saving ? "Menyimpan..." : "💾 Simpan Perubahan"}
         </button>
 
-        {form.status === "lunas" && !reservation.invoiceNumber && (
+        {!reservation.invoiceNumber && (
           <button
             onClick={generateInvoice}
             className="w-full sm:w-auto px-6 py-3.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all text-sm active:scale-[0.98]"

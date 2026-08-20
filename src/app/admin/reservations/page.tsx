@@ -6,10 +6,12 @@ import Link from "next/link";
 interface Reservation {
   id: string;
   guestName: string;
+  phone: string | null;
   roomType: string;
   roomNumber: string;
   price: number;
   status: string;
+  dpAmount: number;
   checkIn: string;
   checkOut: string;
   invoiceNumber: string | null;
@@ -169,7 +171,7 @@ export default function ReservationsPage() {
                           >
                             Detail
                           </Link>
-                          {r.status === "lunas" && r.invoiceNumber && (
+                          {r.invoiceNumber && (
                             <Link
                               href={`/admin/invoice/${r.id}`}
                               className="text-blue-500 hover:underline text-sm font-medium"
@@ -236,9 +238,14 @@ export default function ReservationsPage() {
 
                 {/* Bottom row: price + actions */}
                 <div className="flex items-center justify-between pt-2.5 border-t border-gray-100">
-                  <span className="font-bold text-sm text-gray-900">{formatPrice(r.price)}</span>
+                  <div>
+                    <span className="font-bold text-sm text-gray-900">{formatPrice(r.price)}</span>
+                    {r.status === "dp" && r.dpAmount > 0 && (
+                      <p className="text-[11px] text-yellow-600 font-medium">DP: {formatPrice(r.dpAmount)}</p>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3">
-                    {r.status === "lunas" && r.invoiceNumber && (
+                    {r.invoiceNumber && (
                       <span className="text-xs text-blue-500 font-medium">🧾 Invoice</span>
                     )}
                     <span className="text-xs text-gold font-medium">Detail →</span>

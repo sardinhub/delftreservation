@@ -30,12 +30,7 @@ export async function POST(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reservation = result.rows[0] as any;
 
-    if (reservation.status !== "lunas") {
-      return NextResponse.json(
-        { error: "Invoice hanya bisa dibuat untuk reservasi berstatus LUNAS" },
-        { status: 400 }
-      );
-    }
+    // Allow invoice for all statuses: menunggu_pembayaran, dp, lunas
 
     if (reservation.invoiceNumber) {
       return NextResponse.json({

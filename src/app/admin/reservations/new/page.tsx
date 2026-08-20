@@ -17,6 +17,8 @@ export default function NewReservationPage() {
     checkIn: "",
     checkOut: "",
     price: "",
+    status: "menunggu_pembayaran",
+    dpAmount: "",
     notes: "",
   });
 
@@ -28,8 +30,7 @@ export default function NewReservationPage() {
     try {
       const res = await fetch("/api/reservations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        headers: { "Content-Type": "application/json" },          body: JSON.stringify({
           guestName: form.guestName,
           phone: form.phone || null,
           roomType: form.roomType,
@@ -37,6 +38,8 @@ export default function NewReservationPage() {
           checkIn: form.checkIn,
           checkOut: form.checkOut,
           price: parseInt(form.price),
+          status: form.status,
+          dpAmount: form.status === "dp" ? parseInt(form.dpAmount) || 0 : 0,
           notes: form.notes || null,
         }),
       });
@@ -158,20 +161,69 @@ export default function NewReservationPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
-              Harga (Rp) *
-            </label>
-            <input
-              type="number"
-              required
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
-              placeholder="Contoh: 500000"
-            />
-            <p className="text-[11px] sm:text-xs text-gray-400 mt-1">Input harga secara manual (total untuk seluruh masa inap)</p>
+          {/* Harga + Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                Harga (Rp) *
+              </label>
+              <input
+                type="number"
+                required
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                placeholder="Contoh: 500000"
+              />
+              <p className="text-[11px] sm:text-xs text-gray-400 mt-1">Total harga masa inap</p>
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                Status *
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value, dpAmount: e.target.value !== "dp" ? "" : form.dpAmount })}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none bg-white"
+              >
+                <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
+                <option value="dp">DP (Down Payment)</option>
+                <option value="lunas">Lunas</option>
+              </select>
+            </div>
           </div>
+
+          {/* DP Amount - only show when status=dp */}
+          {form.status === "dp" && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-yellow-700 mb-1.5">
+                    Nominal DP (Rp) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={form.dpAmount}
+                    onChange={(e) => setForm({ ...form, dpAmount: e.target.value })}
+                    className="w-full px-4 py-3 border border-yellow-300 rounded-xl text-sm focus:ring-2 focus:ring-gold/30 focus:border-gold outline-none"
+                    placeholder="Contoh: 250000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-yellow-700 mb-1.5">
+                    Sisa Pembayaran
+                  </label>
+                  <div className="w-full px-4 py-3 border border-yellow-200 rounded-xl text-sm bg-yellow-100/50 text-yellow-800 font-semibold">
+                    {form.price && form.dpAmount
+                      ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(parseInt(form.price) - parseInt(form.dpAmount))
+                      : "-"}
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-yellow-600 mt-1">Otomatis dihitung dari Harga - DP</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">

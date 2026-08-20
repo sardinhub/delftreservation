@@ -162,6 +162,11 @@ a[role="button"],
   }
 }
 
+/* ===== WATERMARK ROTATION ===== */
+.-rotate-30 {
+  transform: rotate(-30deg);
+}
+
 /* ===== PRINT STYLES ===== */
 @media print {
   .no-print {
@@ -174,5 +179,20 @@ a[role="button"],
   }
   @page {
     margin: 0.5cm;
+  }
+  .print\:block {
+    display: block !important;
+  }
+  .print\:opacity-30 {
+    opacity: 0.3 !important;
+  }
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  .print\:border-none {
+    border: none !important;
+  }
+  .print\:p-0 {
+    padding: 0 !important;
   }
 }
