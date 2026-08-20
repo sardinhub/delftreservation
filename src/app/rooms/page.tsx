@@ -52,24 +52,38 @@ function getRoomStatusInfo(room: {
 }
 
 export default async function RoomsPage() {
-  const rooms = await prisma.room.findMany({
-    include: {
-      reservations: {
-        where: {
-          status: {
-            notIn: ["rejected", "cancelled"],
+  let rooms: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    floor: number;
+    status: string;
+    image: string | null;
+    reservations: { id: string; checkIn: Date; checkOut: Date; status: string }[];
+  }[] = [];
+  try {
+    rooms = await prisma.room.findMany({
+      include: {
+        reservations: {
+          where: {
+            status: {
+              notIn: ["rejected", "cancelled"],
+            },
+          },
+          select: {
+            id: true,
+            checkIn: true,
+            checkOut: true,
+            status: true,
           },
         },
-        select: {
-          id: true,
-          checkIn: true,
-          checkOut: true,
-          status: true,
-        },
       },
-    },
-    orderBy: { name: "asc" },
-  });
+      orderBy: { name: "asc" },
+    });
+  } catch (error) {
+    console.error("Failed to fetch rooms:", error);
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -93,6 +107,17 @@ export default async function RoomsPage() {
       {/* Room Cards */}
       <section className="py-12 bg-cream flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {rooms.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-5xl mb-4">⚠️</div>
+              <h3 className="text-xl font-bold text-navy mb-2">Gagal Memuat Data Kamar</h3>
+              <p className="text-gray-500 mb-6">Terjadi kesalahan saat mengambil data dari server. Silakan coba lagi nanti atau hubungi admin.</p>
+              <a href="https://wa.me/62811412805" target="_blank" rel="noopener noreferrer"
+                className="inline-block px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-white font-semibold rounded-xl">
+                Hubungi Admin
+              </a>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {rooms.map((room) => {
               const statusInfo = getRoomStatusInfo(room);
@@ -183,6 +208,7 @@ export default async function RoomsPage() {
               );
             })}
           </div>
+          )}
         </div>
       </section>
 
